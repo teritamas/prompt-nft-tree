@@ -312,11 +312,11 @@
   <div
     id="extralarge-modal"
     tabindex="-1"
-    class=" fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full"
+    class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full"
   >
     <div class="relative w-full max-w-7xl max-h-full">
       <!-- Modal content -->
-      <div class="relative bg-gray-700 rounded-lg shadow dark:bg-gray-700">
+      <div class="glass-modal relative bg-gray-700 rounded-lg shadow dark:bg-gray-700">
         <!-- Modal header -->
         <div class="flex items-center justify-between p-5 border-b rounded-t dark:border-gray-600">
           <h3 class="text-xl font-medium text-white">image title</h3>
@@ -348,24 +348,34 @@
             for its citizens, companies around the world are updating their terms of service
             agreements to comply.
           </p>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div class="bg-white">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="cols-2">
               <label
                 for="message"
-                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >Your message</label
+                class="block prompt-list-label mt-4 mb-2 text-sm font-medium text-white dark:text-white"
+                >Prompt</label
               >
               <textarea
                 id="message"
-                rows="4"
-                class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                placeholder="Write your thoughts here..."
+                rows="3"
+                class="block p-1 w-full text-sm glass text-white placeholder-white"
+              />
+              <label
+                for="message"
+                class="block mt-4 mb-2 prompt-list-label text-sm font-medium text-white dark:text-white"
+                >Negative Prompt</label
+              >
+              <textarea
+                id="message"
+                rows="3"
+                class="block p-1 w-full text-sm glass text-white placeholder-white"
               />
             </div>
-            <div class="bg-white">
+            <div class="cols-1">
               <img src="/images/web3tokyoglobal3.png" alt="" />
             </div>
-            <div class="bg-white">
+            <div class="cols-1">
+              <h3 class="text-xl font-medium text-white">Prompt tree</h3>
               <nav class="nav">
                 <ul>
                   <li>
@@ -455,19 +465,6 @@
                         >
                           <img src="/images/web3tokyoglobalhappy.png" alt="" />
                         </button>
-                        <ul>
-                          <li>
-                            <a href="#">grow</a>
-                            <ul>
-                              <li>
-                                <a href="#">prompts</a>
-                              </li>
-                              <li>
-                                <a href="#">tree</a>
-                              </li>
-                            </ul>
-                          </li>
-                        </ul>
                       </li>
                       <li>
                         <button
@@ -478,14 +475,6 @@
                         >
                           <img src="/images/web3tokyoglobal3.png" alt="" />
                         </button>
-                        <ul>
-                          <li>
-                            <a href="#">with</a>
-                          </li>
-                          <li>
-                            <a href="#">you</a>
-                          </li>
-                        </ul>
                       </li>
                     </ul>
                   </li>
@@ -680,10 +669,42 @@
     padding: 0 !important;
   }
   .img-object-fit-radius-modal img {
-    width: 50px;
-    height: 50px;
+    width: 30px;
+    height: 30px;
     object-fit: cover;
     border-radius: 50%;
     margin: 0 auto;
+  }
+
+  .glass-modal {
+    width: 100%;
+    padding: 30px;
+    background-color: rgba(255, 255, 255, 0.1); /* 背景色 */
+    border: 1px solid rgba(255, 255, 255, 0.4); /* ボーダー */
+    border-right-color: rgba(255, 255, 255, 0.2);
+    border-bottom-color: rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    -webkit-backdrop-filter: blur(20px); /* ぼかしエフェクト */
+    backdrop-filter: blur(20px);
+  }
+
+  /* ガラス本体 */
+  .glass {
+    width: 100%;
+    max-width: 600px;
+    padding: 30px;
+    background-color: rgba(255, 255, 255, 0.1); /* 背景色 */
+    border: 1px solid rgba(255, 255, 255, 0.4); /* ボーダー */
+    border-right-color: rgba(255, 255, 255, 0.2);
+    border-bottom-color: rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    -webkit-backdrop-filter: blur(20px); /* ぼかしエフェクト */
+    backdrop-filter: blur(20px);
+  }
+
+  .prompt-list-label:before {
+    content: "●";
+    color: rgba(63, 131, 248, 0.5);
+    padding-right: 0.5rem;
   }
 </style>
