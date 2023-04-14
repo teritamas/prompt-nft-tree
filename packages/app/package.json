@@ -1,0 +1,44 @@
+{
+	"name": "app",
+	"private": true,
+	"type": "module",
+	"engines": {
+		"node": ">=16.0.0"
+	},
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"lint": "prettier --plugin-search-dir . --check . && eslint .",
+		"format": "prettier --plugin-search-dir . --write .",
+		"wagmi": "pnpm exec wagmi generate"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-auto": "^2.0.0",
+		"@sveltejs/kit": "^1.15.4",
+		"@typescript-eslint/eslint-plugin": "^5.58.0",
+		"@typescript-eslint/parser": "^5.58.0",
+		"@wagmi/cli": "^0.1.15",
+		"abitype": "^0.6.8",
+		"eslint": "^8.38.0",
+		"eslint-config-prettier": "^8.8.0",
+		"eslint-plugin-svelte3": "^4.0.0",
+		"prettier": "^2.8.7",
+		"prettier-plugin-svelte": "^2.10.0",
+		"svelte": "^3.58.0",
+		"svelte-check": "^3.2.0",
+		"tslib": "^2.5.0",
+		"typescript": "^4.9.5",
+		"vite": "^4.2.1",
+		"vite-plugin-node-polyfills": "^0.7.0"
+	},
+	"dependencies": {
+		"@picocss/pico": "^1.5.9",
+		"@wagmi/core": "0.10.2",
+		"@web3modal/ethereum": "^2.2.2",
+		"@web3modal/html": "^2.2.2",
+		"ethers": "^5.7.2"
+	}
+}
