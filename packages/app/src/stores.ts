@@ -8,3 +8,5 @@ export const ethereumClient = writable<EthereumClient>();
 export const wagmiClient = writable<Client>();
 export const web3Modal = writable<Web3Modal>();
 export const providers = writable<{ [chainId: number]: ethers.providers.JsonRpcProvider }>();
+
+export const nftId = writable(1);

@@ -1,5 +1,6 @@
 <script lang="ts">
   //  import "@picocss/pico/css/pico.min.css";
+  import "../global.css";
   import { taiko } from "../domain/chain";
   import { ethereumClient, wagmiClient, web3Modal, providers } from "../stores";
   import { configureChains, createClient } from "@wagmi/core";
