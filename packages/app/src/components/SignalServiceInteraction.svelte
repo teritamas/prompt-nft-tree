@@ -115,7 +115,7 @@
 </script>
 
 <!-- start template -->
-<section>
+<!--<section>
   <strong> Steps: </strong>
   <ol>
     <li>
@@ -149,4 +149,4 @@
 
 <section>
   <div>Is signal received: <strong>{isSignalReceivedMessage}</strong></div>
-</section>
+</section>-->
