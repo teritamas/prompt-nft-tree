@@ -1,7 +1,6 @@
 <script>
   // @ts-nocheck
 
-  import { nftId } from "../stores";
   const nftLists = {
     1: {
       parentId: 1,
@@ -62,9 +61,6 @@
   };
 
   let id = 1;
-  nftId.subscribe((value) => {
-    id = value;
-  });
 </script>
 
 <div

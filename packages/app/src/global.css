@@ -31,9 +31,12 @@ body {
 
 #body {
   position: absolute;
-  /*top: 0;*/
-  left: 0;
   padding: 5rem;
+  left: 0;
+  right: 0;
+  margin: auto;
+  max-width: 1200px;
+
 }
 
 h1 {
@@ -166,8 +169,8 @@ h1 {
 }
 
 .img-object-fit-radius-modal img:hover {
-    transform: scale(4, 4);
-    z-index: 10;
+    transform: scale(3, 3);
+    z-index: 11;
   }
 
 .glass-modal {

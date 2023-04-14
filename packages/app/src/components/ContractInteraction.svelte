@@ -103,7 +103,7 @@
       <CreatedNftLists />
     </div>
     <!--modal-->
-    <!--modalを二つのコンポーネントにわけないで、コンポーネント一個で条件分岐してもいいかも-->
+    <!--modalを二つのコンポーネントにわけないで、コンポーネント一個で条件分岐するほうがいい-->
     <ModalCreateNft />
     <ModalBuyNft />
     <!--modal-->
