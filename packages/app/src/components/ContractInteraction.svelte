@@ -1,43 +1,48 @@
 <script lang="ts">
   // imports
   import { readContract, prepareWriteContract, writeContract } from "@wagmi/core";
-  import { fooABI, fooAddress } from "../generated";
+  import { fooABI, promptTreeNftABI, promptTreeNftAddress } from "../generated";
   import { foundry } from "@wagmi/core/chains";
-
+    import { BigNumber } from "ethers";
   // variables
-  let inputMessage = "";
+  let encryptedPrompt = "";
   let messageFromContract = "";
-
+  let tokenId = "";
+  
   // functions
-  async function readMessage() {
-    const data = await readContract({
-      address: fooAddress[foundry.id],
-      abi: fooABI,
-      functionName: "myString",
-    });
-    messageFromContract = data;
-  }
-
-  async function writeMessage() {
+  async function mintNft() {
     const config = await prepareWriteContract({
-      address: fooAddress[foundry.id],
-      abi: fooABI,
-      functionName: "setMyString",
-      args: [inputMessage],
+      address: promptTreeNftAddress[foundry.id],
+      abi: promptTreeNftABI,
+      functionName: "mintNft",
+      args: [promptTreeNftAddress[foundry.id], encryptedPrompt, BigNumber.from(0)],
     });
     await writeContract(config);
-    readMessage();
+    console.log("Complete!");
+  }
+
+  async function readMessage() {
+    messageFromContract = "reset"
+    const data = await readContract({
+      address: promptTreeNftAddress[foundry.id],
+      abi: promptTreeNftABI,
+      functionName: "getEncryptedPrompt",
+      args: [BigNumber.from(tokenId)]
+    });
+    console.log(data);
+    messageFromContract = data;
   }
 </script>
 
 <section>Note: Must be connected to local foundry (anvil) network.</section>
 <section>
-  <input type="submit" value="Read message" on:click={readMessage} />
-  <div style="text-align: center">Message from contract: {messageFromContract}</div>
+    <input type="text" placeholder="ReadEncryptedPrompt" bind:value={encryptedPrompt} />
+    <input type="submit" value="NftMint" on:click={mintNft} />
 </section>
 <section>
   <form>
-    <input type="text" placeholder="Enter some text..." bind:value={inputMessage} />
-    <input type="submit" value="Write" on:click={writeMessage} />
+    <input type="text" placeholder="Token Id" bind:value={tokenId} />
+    <input type="submit" value="Get Read Encypted" on:click={readMessage} />
+    <div style="text-align: center">Message from contract: {messageFromContract}</div>
   </form>
 </section>
