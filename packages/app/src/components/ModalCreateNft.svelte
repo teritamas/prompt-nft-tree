@@ -4,9 +4,10 @@
   import { prepareWriteContract, writeContract } from "@wagmi/core";
   import { foundry } from "@wagmi/core/chains";
   import { BigNumber } from "ethers";
-  import { addNft, fileUpload, getLatestTokenId, incrementTokenId } from "../facades/database";
-  import { nftId, openModal } from "../stores";
-  import { litNodeClient, connect, encrypt, decrypt } from "../facades/authorization";
+  import { addNft, addNftToAccount, checkNftOwn, fileUpload, getLatestTokenId, incrementTokenId } from "../facades/database";
+  import { nftId,wagmiClient, openModal } from "../stores";
+  import {encrypt } from "../facades/authorization";
+  import type { promptNft } from "../model/promptNft";
   import Loading from "./Loading.svelte";
   import Finished from "./Finished.svelte";
 
@@ -15,23 +16,36 @@
   let loadingIsShow = false;
   let finishedIsShow = false;
   let encryptedPrompt = "";
-  getLatestTokenId();
+    
+  let walltaddress = '';
+  wagmiClient.subscribe(async (value)=>{
+    walltaddress = value.data?.account;
+    const val = await checkNftOwn(walltaddress, 19);
+    console.log(val);
+
+    if(val.length === 1){
+      console.log(val[0]);
+    }
+    else {
+      console.log("このNFTは保有してません！")
+    }
+  });
+
+  getLatestTokenId()
 
   async function mintNft() {
     loadingIsShow = true;
-    // await encrypt("konaaaaannitichi").then(x=>{
-    //   console.log("暗号化完了", x);
-    //   console.log("複合開始");
-    //   decrypt(x.encryptedString, x.encryptedSymmetricKey).then(y=>{
-    //     console.log("復号完了!", y)
-    //   })
-    // });
-    getLatestTokenId()
-      .then(async (tokenId) => {
-        // APIを叩きすぎると料金が嵩むので、ファイルをアップロード
-        fileUpload(generativeImage, Number(tokenId));
-        encryptedPrompt = positivePrompt;
-        console.log("nftに変換します", tokenId, generativeImage);
+    
+    // 1. 暗号化
+    const {encryptedString, encryptedSymmetricKey} = await encrypt(positivePrompt)
+    console.log("暗号化完了", encryptedString, encryptedSymmetricKey);
+
+    getLatestTokenId().then(async (tokenId)=>{
+      // APIを叩きすぎると料金が嵩むので、ファイルをアップロード
+      fileUpload(generativeImage, Number(tokenId));
+      encryptedString.text().then(async x=>{
+        encryptedPrompt = x
+        console.log("nftに変換します", tokenId, encryptedPrompt)        
         const config = await prepareWriteContract({
           // TODO: encrypted
           address: promptTreeNftAddress[foundry.id],
@@ -39,24 +53,32 @@
           functionName: "mintNft",
           args: [promptTreeNftAddress[foundry.id], encryptedPrompt, BigNumber.from(id)],
         });
-
-        setLoading(); //k仮置き、位置調整する
+        
         // トランザクションのリクエスト完了まで待つ
-        await writeContract(config).then((_) => {
-          addNft(Number(tokenId), id).then((_) => {
-            incrementTokenId();
-          });
+        setLoading(); // 仮置き、位置調整する
+        await writeContract(config);
+
+        addNft(Number(tokenId), id, encryptedSymmetricKey)
+          .then(async nft=>{
+            await addNftToAccount(walltaddress, nft as promptNft);
+            console.log("increment Start")
+            incrementTokenId().then(_=>{
+              console.log("increment Complete")
+            });
         });
-      })
-      .catch((e) => {
+      }).catch(e=>{
         console.error(e);
       });
+    });
+    // });
   }
+
   let id = 1;
   nftId.subscribe((value) => {
     id = value;
   });
   let positivePrompt = "";
+
   async function generate() {
     loadingIsShow = true;
     generateAndUpdateNode(apiKey, positivePrompt)
@@ -172,7 +194,7 @@
             <!--<img src={_nftList[id]["imagePath"]} alt="生成された画像" />-->
           </div>
           <div class="cols-1">
-            <h3 class="text-xl font-medium text-white">Prompt tree</h3>
+            <h3 class="text-xl font-medium text-white">Prompt NFT Tree</h3>
             <nav class="nav">
               <ul>
                 <li>

@@ -58,7 +58,7 @@
       </svg>
 
       <span class="self-center text-2xl font-semibold whitespace-nowrap text-white"
-        >Prompt Tree</span
+        >Prompt NFT Tree</span
       >
     </a>
     <button
