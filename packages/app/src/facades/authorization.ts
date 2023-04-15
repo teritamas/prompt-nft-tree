@@ -38,17 +38,17 @@ export async function encrypt(message: string) {
   });
 
   return {
-    encryptedString,
+    encryptedString: await LitJsSdk.blobToBase64String(encryptedString),
     encryptedSymmetricKey: LitJsSdk.uint8arrayToString(encryptedSymmetricKey, "base16"),
   };
 }
 
-export async function decrypt(encryptedStringBlob: Blob, encryptedSymmetricKey: string) {
+export async function decrypt(encryptedString: string, encryptedSymmetricKey: string) {
   if (!litNodeClient) {
     await connect();
   }
-
   const authSig = await LitJsSdk.checkAndSignAuthMessage({ chain });
+
   const symmetricKey = await litNodeClient.getEncryptionKey({
     accessControlConditions,
     toDecrypt: encryptedSymmetricKey,
@@ -56,7 +56,10 @@ export async function decrypt(encryptedStringBlob: Blob, encryptedSymmetricKey: 
     authSig,
   });
 
-  const decryptedString = await LitJsSdk.decryptString(encryptedStringBlob, symmetricKey);
+  const decryptedString = await LitJsSdk.decryptString(
+    LitJsSdk.base64StringToBlob(encryptedString),
+    symmetricKey
+  );
 
-  return { decryptedString };
+  return decryptedString;
 }
