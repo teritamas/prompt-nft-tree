@@ -7,7 +7,7 @@
         <div />
         <div />
         <div />
-        <p class="font-bold text-white">処理中です</p>
+        <p class="font-bold text-white">Processing</p>
       </div>
     </div>
   </div>
