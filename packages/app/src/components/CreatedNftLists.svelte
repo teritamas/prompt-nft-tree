@@ -70,19 +70,4 @@
   }
 </script>
 
-{#each nftLists as item (item.id)}
-  <div>
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <button
-      data-modal-target="extralarge-modal-buy"
-      data-modal-toggle="extralarge-modal-buy"
-      on:click={() => openModal(1)}
-    >
-      <img
-        class="h-auto max-w-full rounded-lg"
-        src="/images/{item['imagePath']}.png"
-        alt={item["title"]}
-      />
-    </button>
-  </div>
-{/each}
+<div>hoge</div>

@@ -1,12 +1,19 @@
 <script lang="ts">
-  import { generateAndUpdateNode } from "../facades/generativeAi"
+  import { generateAndUpdateNode } from "../facades/generativeAi";
   import { promptTreeNftABI, promptTreeNftAddress } from "../generated";
   import { prepareWriteContract, writeContract } from "@wagmi/core";
   import { foundry } from "@wagmi/core/chains";
   import { BigNumber } from "ethers";
   import { nftId } from "../stores";
+  import Loading from "./Loading.svelte";
+  import Finished from "./Finished.svelte";
 
   let apiKey = "";
+  let loadingIsShow = false;
+  let finishedIsShow = true;
+  let id = 1;
+  let positivePrompt = "";
+  let encryptedPrompt = "";
 
   const nftLists = {
     1: {
@@ -67,10 +74,13 @@
     },
   };
 
-  let encryptedPrompt = "";
   // functions
   async function mintNft() {
     encryptedPrompt = positivePrompt;
+    loadingIsShow = true;
+    setTimeout(() => {
+      loadingIsShow = false;
+    }, 10000);
     const config = await prepareWriteContract({
       // TODO: encrypted
       address: promptTreeNftAddress[foundry.id],
@@ -82,17 +92,16 @@
     console.log("Comcplete!");
   }
 
-  let id = 1;
   nftId.subscribe((value) => {
     id = value;
   });
-  let positivePrompt = "";
 
   async function generate() {
-    await generateAndUpdateNode(
-      apiKey,
-      positivePrompt,
-    )
+    loadingIsShow = true;
+    await generateAndUpdateNode(apiKey, positivePrompt);
+    setTimeout(() => {
+      loadingIsShow = false;
+    }, 10000);
   }
 </script>
 
@@ -160,9 +169,11 @@
               bind:value={nftLists[id]["negativePrompt"]}
             />
             <label
-            for="message"
-            class="block mt-4 mb-2 prompt-list-label text-sm font-medium text-white dark:text-white"
-            >API KEY(<a href="https://beta.dreamstudio.ai/generate">Created Here!</a>)</label
+              for="message"
+              class="block mt-4 mb-2 prompt-list-label text-sm font-medium text-white dark:text-white"
+              >API KEY(<a href="https://beta.dreamstudio.ai/generate" class="text-link"
+                >Created Here!</a
+              >)</label
             >
             <input
               id="message"
@@ -171,11 +182,11 @@
               bind:value={apiKey}
             />
             <button
-            on:click={generate}
-            type="button"
-            class="text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center mt-3"
-            >Generate Image</button
-          >
+              on:click={generate}
+              type="button"
+              class="text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center mt-3"
+              >Generate Image</button
+            >
           </div>
           <div id="generativeImage" class="cols-1">
             <img src="/images/{nftLists[id]['imagePath']}.png" alt="" />
@@ -310,3 +321,9 @@
     </div>
   </div>
 </div>
+{#if loadingIsShow}
+  <Loading />
+{/if}
+{#if finishedIsShow}
+  <Finished />
+{/if}
