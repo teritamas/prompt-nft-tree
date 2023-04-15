@@ -1,0 +1,206 @@
+*,
+*:before,
+*:after {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+* {
+  -webkit-transition: all ease 0.4s;
+  -moz-transition: all ease 0.4s;
+  transition: all ease 0.4s;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+
+  font-family: "Fjalla One", sans-serif;
+  font-size: 18px;
+}
+
+#bg {
+  position: fixed;
+  /*top: 0;*/
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#body {
+  position: absolute;
+  padding: 5rem;
+  left: 0;
+  right: 0;
+  margin: auto;
+  max-width: 1200px;
+
+}
+
+h1 {
+  text-align: center;
+}
+
+.nav {
+  margin: 0 auto;
+  min-height: auto;
+}
+
+.nav ul {
+  position: relative;
+  padding-top: 20px;
+}
+
+.nav li {
+  position: relative;
+  padding: 20px 3px 0 3px;
+  float: left;
+
+  text-align: center;
+  list-style-type: none;
+}
+
+.nav li::before,
+.nav li::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 50%;
+  width: 50%;
+  height: 20px;
+  border-top: 1px solid #ccc;
+}
+
+.nav li::after {
+  left: 50%;
+  right: auto;
+
+  border-left: 1px solid #ccc;
+}
+
+.nav li:only-child::after,
+.nav li:only-child::before {
+  content: "";
+  display: none;
+}
+
+.nav li:only-child {
+  padding-top: 0;
+}
+.nav li:first-child::before,
+.nav li:last-child::after {
+  border: 0 none;
+}
+
+.nav li:last-child::before {
+  border-right: 1px solid #ccc;
+  border-radius: 0 5px 0 0;
+}
+
+.nav li:first-child::after {
+  border-radius: 5px 0 0 0;
+}
+.nav ul ul::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  border-left: 1px solid #ccc;
+  width: 0;
+  height: 20px;
+}
+
+.nav li a {
+  display: inline-block;
+  padding: 5px 10px;
+
+  border-radius: 5px;
+  border: 1px solid #ccc;
+
+  text-decoration: none;
+  text-transform: uppercase;
+  color: #ccc;
+  font-family: arial, verdana, tahoma;
+  font-size: 11px;
+}
+
+.nav li a:hover,
+.nav li a:hover + ul li a {
+  color: #000;
+  background: #c8e4f8;
+  border: 1px solid #94a0b4;
+}
+
+.nav li a:hover + ul li::after,
+.nav li a:hover + ul li::before,
+.nav li a:hover + ul::before,
+.nav li a:hover + ul ul::before {
+  content: "";
+  border-color: #94a0b4;
+}
+
+.img-object-fit-radius {
+  padding: 0 !important;
+}
+.img-object-fit-radius img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin: 0 auto;
+}
+
+.img-object-fit-radius img:hover {
+  transform: scale(1.5, 1.5);
+  z-index: 10;
+}
+
+.img-object-fit-radius-modal {
+  padding: 0 !important;
+}
+.img-object-fit-radius-modal img {
+  width: 30px;
+  height: 30px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin: 0 auto;
+}
+
+.img-object-fit-radius-modal img:hover {
+    transform: scale(3, 3);
+    z-index: 11;
+  }
+
+.glass-modal {
+  width: 100%;
+  padding: 30px;
+  background-color: rgba(255, 255, 255, 0.1); /* 背景色 */
+  border: 1px solid rgba(255, 255, 255, 0.4); /* ボーダー */
+  border-right-color: rgba(255, 255, 255, 0.2);
+  border-bottom-color: rgba(255, 255, 255, 0.2);
+  border-radius: 15px;
+  -webkit-backdrop-filter: blur(20px); /* ぼかしエフェクト */
+  backdrop-filter: blur(20px);
+}
+
+/* ガラス本体 */
+.glass {
+  width: 100%;
+  max-width: 600px;
+  padding: 30px;
+  background-color: rgba(255, 255, 255, 0.1); /* 背景色 */
+  border: 1px solid rgba(255, 255, 255, 0.4); /* ボーダー */
+  border-right-color: rgba(255, 255, 255, 0.2);
+  border-bottom-color: rgba(255, 255, 255, 0.2);
+  border-radius: 15px;
+  -webkit-backdrop-filter: blur(20px); /* ぼかしエフェクト */
+  backdrop-filter: blur(20px);
+}
+
+.prompt-list-label:before {
+  content: "●";
+  color: rgba(63, 131, 248, 0.5);
+  padding-right: 0.5rem;
+}
