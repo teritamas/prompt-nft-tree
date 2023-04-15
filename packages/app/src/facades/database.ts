@@ -3,6 +3,7 @@ import { getFirestore, collection, getDocs, addDoc, updateDoc } from "firebase/f
 import { getStorage, uploadBytes, ref, getBlob, getDownloadURL } from "firebase/storage";
 import { XMLHttpRequest } from "xmlhttprequest";
 import type { promptNft } from "../model/promptNft";
+import type { User } from "../model/user";
 
 const firebaseConfig = {
   authDomain: "prompt-tree.firebaseapp.com",
@@ -85,6 +86,30 @@ export function getLatestTokenId() {
 }
 
 /**
+ * 購入済みかどうかを確認
+ */
+export async function createAccount(walletAddress: string) {
+  if (!walletAddress) {
+    console.log("undefinedなのでスキップします");
+    return "";
+  }
+  const accountCol = collection(db, "account");
+  const account = await getDocs(accountCol).then(async (config) => {
+    return config.docs.filter((doc) => doc.get("walletAddress") === walletAddress);
+  });
+
+  if (account.length === 0) {
+    await addDoc(accountCol, {
+      walletAddress: walletAddress,
+      ownNfts: [],
+    });
+    console.log("追加しました。");
+  } else {
+    console.log("すでに存在しています");
+  }
+}
+
+/**
  * tokenIdのインクリメント
  */
 export function incrementTokenId() {
@@ -111,15 +136,20 @@ export function fileUpload(data: Blob, tokenId: number) {
 
 export function downloadImage(tokenId: number) {
   return new Promise((resolve) => {
-    getDownloadURL(ref(storage, "files/" + tokenId + ".jpeg")).then((url) => {
-      const xhr = new XMLHttpRequest();
-      xhr.responseType = "blob";
-      xhr.onload = (_) => {
-        const blob = xhr.response;
-      };
-      xhr.open("GET", url);
-      xhr.send();
-      resolve(url);
-    });
+    getDownloadURL(ref(storage, "files/" + tokenId + ".jpeg"))
+      .then((url) => {
+        const xhr = new XMLHttpRequest();
+        xhr.responseType = "blob";
+        xhr.onload = (_) => {
+          const blob = xhr.response;
+        };
+        xhr.open("GET", url);
+        xhr.send();
+        resolve(url);
+      })
+      .catch((e) => {
+        console.log(e);
+        resolve("");
+      });
   });
 }
