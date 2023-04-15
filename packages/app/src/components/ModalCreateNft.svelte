@@ -12,6 +12,7 @@
     fileUpload,
     getLatestTokenId,
     incrementTokenId,
+    addNftToAccountByTokenId
   } from "../facades/database";
   import { nftId, wagmiClient, openModal } from "../stores";
   import { decrypt, encrypt } from "../facades/authorization";
@@ -27,42 +28,33 @@
   let positivePrompt = "";
   let id = 1;
   let isOwn = false;
-
+  let walltaddress = "";
+  let messageFromContract = "";
+  
   nftId.subscribe((value) => {
     id = value;
   });
 
-  let walltaddress = "";
-  let messageFromContract = "";
-
+  checkNftOwner();
+  getLatestTokenId();
   downloadImage(id).then((x) => {
     defaultImageUrl = x;
   });
 
-  wagmiClient.subscribe(async (value) => {
-    const encryptedPrompt = await readEncryptPrompt();
-    walltaddress = value.data?.account;
-    const val = await checkNftOwn(walltaddress, id);
+  function checkNftOwner(){
+    wagmiClient.subscribe(async (value) => {
+      const encryptedPrompt = await readEncryptPrompt();
+      walltaddress = value.data?.account;
+      const val = await checkNftOwn(walltaddress, id);
 
-    if (val.length === 1) {
-      isOwn = true;
-      const decryptedPrompt = await decrypt(encryptedPrompt, val[0].encryptedSymmetricKey);
-      positivePrompt = decryptedPrompt;
-    } else {
-      console.log("このNFTは保有してません！");
-    }
-  });
-
-  function arrayBufferToBinaryString(arrayBuffer) {
-    let binaryString = "";
-    console.warn(arrayBuffer);
-    const bytes = new Uint8Array(arrayBuffer);
-    console.warn(bytes);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-      binaryString += String.fromCharCode(bytes[i]);
-    }
-    return binaryString;
+      if (val.length === 1) {
+        isOwn = true;
+        const decryptedPrompt = await decrypt(encryptedPrompt, val[0].encryptedSymmetricKey);
+        positivePrompt = decryptedPrompt;
+      } else {
+        console.log("このNFTは保有してません！");
+      }
+    });
   }
 
   async function readEncryptPrompt() {
@@ -76,11 +68,15 @@
     return data;
   }
 
-  getLatestTokenId();
+  async function purchasedNft(){
+    addNftToAccountByTokenId(walltaddress, id)
+    .then(_=>{}).finally(_=>{
+      checkNftOwner();
+    });
+  }
 
   async function mintNft() {
     loadingIsShow = true;
-
     // 1. 暗号化
     const { encryptedString, encryptedSymmetricKey } = await encrypt(positivePrompt);
     console.log("暗号化完了", encryptedString, encryptedSymmetricKey);
@@ -100,15 +96,14 @@
       // トランザクションのリクエスト完了まで待つ
       setLoading(); // 仮置き、位置調整する
       await writeContract(config);
+
       addNft(Number(tokenId), id, encryptedSymmetricKey).then(async (nft) => {
         await addNftToAccount(walltaddress, nft as promptNft);
-        console.log("increment Start");
         incrementTokenId().then((_) => {
-          console.log("increment Complete");
+          console.log("Increment Complete");
         });
       });
     });
-    // });
   }
 
   async function generate() {
@@ -140,7 +135,10 @@
     setTimeout(() => {
       loadingIsShow = false;
       finishedIsShow = true;
-    }, 5000);
+      setTimeout(() => {
+        finishedIsShow = false;
+      }, 1500);
+    }, 3000);
   }
   function closeModal() {
     openModal.set(false); // storeに値を保存
@@ -344,10 +342,10 @@
         {#if !isOwn}
           <!--購入-->
           <button
-            on:click={mintNft}
+            on:click={purchasedNft}
             type="button"
             class="text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-            >Buy NFT</button
+            >Purchased NFT</button
           >
         {/if}
         {#if isOwn}
