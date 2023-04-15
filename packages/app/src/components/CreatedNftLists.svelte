@@ -1,87 +1,62 @@
-<script>
+<script lang="ts">
   // @ts-nocheck
+  import { downloadImage, getNft } from "../facades/database";
+  import { nftId, nftList } from "../stores";
+  
+  // NFT一覧
+  let _nftList = []
+  nftList.subscribe((value) => {
+    _nftList = value;
+  });
 
-  import { nftId } from "../stores";
-  const nftLists = [
-    {
-      parentId: 1,
-      title: "タイトル1",
-      prompt: "tokyo",
-      negativePrompt: "tokyo web3",
-      imagePath: "web3tokyoglobal",
-    },
-    {
-      parentId: 1,
-      title: "タイトル2",
-      prompt: "tokyo love",
-      negativePrompt: "tokyo web3",
-      imagePath: "web3tokyoglobal2",
-    },
-    {
-      parentId: 1,
-      title: "タイトル3",
-      prompt: "tokyo happy",
-      negativePrompt: "tokyo web3",
-      imagePath: "web3tokyoglobalhappy2",
-    },
-    {
-      parentId: 1,
-      title: "タイトル4",
-      prompt: "tokyo",
-      negativePrompt: "tokyo web3",
-      imagePath: "web3tokyoglobalsuccess",
-    },
-    {
-      parentId: 1,
-      title: "タイトル5",
-      prompt: "tokyo love",
-      negativePrompt: "tokyo web3",
-      imagePath: "web3tokyoglobalprompt",
-    },
-    {
-      parentId: 1,
-      title: "タイトル6",
-      prompt: "tokyo happy",
-      negativePrompt: "tokyo web3",
-      imagePath: "web3tokyoglobalprompt2",
-    },
-    {
-      parentId: 1,
-      title: "タイトル7",
-      prompt: "tokyo love",
-      negativePrompt: "web3tokyoglobalhappy web3",
-      imagePath: "web3tokyoglobalhappy",
-    },
-    {
-      parentId: 1,
-      title: "タイトル8",
-      prompt: "tokyo happy",
-      negativePrompt: "web3tokyoglobal3 web3",
-      imagePath: "web3tokyoglobal3",
-    },
-  ];
+  getNft().then(x =>{
+    // nftItem = {
+    //   sourceTokenId: x.sourceTokenId,
+    //   tokenId: x.tokenId,
+    //   imagePath: "",
+    // }
+    nftList.set(x)
+    _nftList.forEach(async x=>{
+      await getImg(x.tokenId)
+    })
+  }).catch(e=>console.log(e));
+
+
+  async function getImg(tokenId){
+    downloadImage(tokenId)
+    .then(x=>{
+      _nftList.map(y=>{
+        if(y.tokenId== tokenId){
+          y.imagePath = x
+        }
+      })
+      // @ts-ignore
+      nftList.set(_nftList)
+    })
+  }
+
 
   let id = 1;
   nftId.subscribe((value) => {
     id = value;
   });
   function openModal(openId) {
+    console.log("openModal")
     nftId.set(openId); // storeに値を保存
   }
 </script>
 
-{#each nftLists as item (item.id)}
+{#each _nftList as item}
   <div>
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <button
-      data-modal-target="extralarge-modal-buy"
-      data-modal-toggle="extralarge-modal-buy"
-      on:click={() => openModal(1)}
+    type="button"
+    data-modal-target="extralarge-modal"
+    data-modal-toggle="extralarge-modal"
+    on:click={() => openModal(item.tokenId)}
     >
       <img
         class="h-auto max-w-full rounded-lg"
-        src="/images/{item['imagePath']}.png"
-        alt={item["title"]}
+        src={item["imagePath"]}
       />
     </button>
   </div>

@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, getDocs, addDoc, updateDoc } from "firebase/firestore";
-import { getStorage, uploadBytes, ref } from "firebase/storage";
+import { getStorage, uploadBytes, ref, getBlob, getDownloadURL } from "firebase/storage";
+import { XMLHttpRequest } from "xmlhttprequest";
 
 const firebaseConfig = {
   authDomain: "prompt-tree.firebaseapp.com",
@@ -85,5 +86,21 @@ export function fileUpload(data: Blob, tokenId: number) {
   const storageRef = ref(storage, "files/" + tokenId.toString() + ".jpeg");
   uploadBytes(storageRef, data).then((snapshot) => {
     console.log("blobのfileをアップロード完了", snapshot);
+  });
+}
+
+export function downloadImage(tokenId: number) {
+  return new Promise((resolve) => {
+    getDownloadURL(ref(storage, "files/" + tokenId + ".jpeg")).then((url) => {
+      const xhr = new XMLHttpRequest();
+      xhr.responseType = "blob";
+      xhr.onload = (_) => {
+        const blob = xhr.response;
+      };
+      xhr.open("GET", url);
+      xhr.send();
+      console.log(url);
+      resolve(url);
+    });
   });
 }
