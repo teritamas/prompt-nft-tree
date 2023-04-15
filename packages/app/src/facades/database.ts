@@ -43,9 +43,13 @@ export function addNft(tokenId: number, sourceTokenId: number, encryptedSymmetri
     sourceTokenId: sourceTokenId,
     encryptedSymmetricKey: encryptedSymmetricKey,
   };
-  return new Promise((_) => {
+
+  return new Promise((resolve) => {
     addDoc(nftCol, nftDoc)
-      .then((_) => console.log("add nft complete!"))
+      .then((_) => {
+        console.log("add nft complete!");
+        resolve(_);
+      })
       .catch((error) => {
         console.error(error);
       });
@@ -86,7 +90,7 @@ export function getLatestTokenId() {
 }
 
 /**
- * 購入済みかどうかを確認
+ * アカウントが存在するか確認
  */
 export async function createAccount(walletAddress: string) {
   if (!walletAddress) {
@@ -114,17 +118,21 @@ export async function createAccount(walletAddress: string) {
  */
 export function incrementTokenId() {
   const configCol = collection(db, "config");
-  getDocs(configCol)
-    .then((config) => {
-      const id = config.docs.filter((doc) => doc.id === "develop").map((x) => x.get("tokenId"));
-      const document = config.docs.filter((doc) => doc.id === "develop")[0].ref;
-      updateDoc(document, {
-        tokenId: Number(id) + 1,
-      }).then((_) => console.log("Complete"));
-    })
-    .catch((error) => {
-      console.error(error);
-    });
+
+  return new Promise((_) => {
+    getDocs(configCol)
+      .then(async (config) => {
+        console.log("incrementTokenId");
+        const id = config.docs.filter((doc) => doc.id === "develop").map((x) => x.get("tokenId"));
+        const document = config.docs.filter((doc) => doc.id === "develop")[0].ref;
+        await updateDoc(document, {
+          tokenId: Number(id) + 1,
+        });
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  });
 }
 
 export function fileUpload(data: Blob, tokenId: number) {

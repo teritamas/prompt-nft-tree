@@ -82,34 +82,38 @@
 
 
   async function mintNft() {
-    encrypt(positivePrompt).then(x=>{
-      console.log("暗号化完了", x.encryptedString, x.encryptedSymmetricKey);
-      const encryptedSymmetricKey = x.encryptedSymmetricKey;
-      getLatestTokenId().then(async (tokenId)=>{
-        // APIを叩きすぎると料金が嵩むので、ファイルをアップロード
-        fileUpload(generativeImage, Number(tokenId));
-        x.encryptedString.text().then(async x=>{
-          encryptedPrompt = x
-          console.log("nftに変換します", tokenId, encryptedPrompt)
-          const config = await prepareWriteContract({
-            // TODO: encrypted
-            address: promptTreeNftAddress[foundry.id],
-            abi: promptTreeNftABI,
-            functionName: "mintNft",
-            args: [promptTreeNftAddress[foundry.id], encryptedPrompt, BigNumber.from(id)],
-          });
-          // トランザクションのリクエスト完了まで待つ
-          await writeContract(config).then(_=>{
-              addNft(Number(tokenId), id, encryptedSymmetricKey)
-              .then(_=>{
-                incrementTokenId();
-              });
-          });
-        }).catch(e=>{
-          console.error(e);
+    // 1. 暗号化
+    const {encryptedString, encryptedSymmetricKey} = await encrypt(positivePrompt)
+    console.log("暗号化完了", encryptedString, encryptedSymmetricKey);
+
+    getLatestTokenId().then(async (tokenId)=>{
+      // APIを叩きすぎると料金が嵩むので、ファイルをアップロード
+      fileUpload(generativeImage, Number(tokenId));
+      encryptedString.text().then(async x=>{
+        encryptedPrompt = x
+        console.log("nftに変換します", tokenId, encryptedPrompt)
+        const config = await prepareWriteContract({
+          // TODO: encrypted
+          address: promptTreeNftAddress[foundry.id],
+          abi: promptTreeNftABI,
+          functionName: "mintNft",
+          args: [promptTreeNftAddress[foundry.id], encryptedPrompt, BigNumber.from(id)],
         });
+        
+        // トランザクションのリクエスト完了まで待つ
+        await writeContract(config);
+        addNft(Number(tokenId), id, encryptedSymmetricKey)
+          .then(_=>{
+            console.log("increment Start")
+            incrementTokenId().then(_=>{
+              console.log("increment Complete")
+            });
+        });
+      }).catch(e=>{
+        console.error(e);
       });
     });
+    // });
   }
 
   let id = 1;
