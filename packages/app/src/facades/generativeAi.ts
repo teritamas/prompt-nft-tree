@@ -2,7 +2,7 @@ import axios from "axios";
 const BASE_URL = "https://api.stability.ai";
 const GENERATE_FULL_URL = `${BASE_URL}/v1/generation/stable-diffusion-v1-5/text-to-image`;
 
-export function generate(apiKey: string, prompt: string): Image {
+export async function generateAndUpdateNode(apiKey: string, prompt: string): Blob {
   const requestBody = {
     text_prompts: [
       {
@@ -29,12 +29,19 @@ export function generate(apiKey: string, prompt: string): Image {
     })
     .then((response: { data: BlobPart }) => {
       const blob = new Blob([response.data], { type: "image/png" });
+
       const url = URL.createObjectURL(blob);
       const img = new Image();
 
       img.onload = function () {
         URL.revokeObjectURL(url);
-        document.body.appendChild(img);
+        const targetArea = document.getElementById("generativeImage")!;
+
+        const currentImage = targetArea.firstChild;
+        if (currentImage) {
+          targetArea.removeChild(currentImage);
+        }
+        targetArea.appendChild(img);
       };
       img.src = url;
       return img;
