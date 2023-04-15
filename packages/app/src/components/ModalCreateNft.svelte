@@ -31,9 +31,11 @@
   let isOwn = false;
   let walltaddress = "";
   let messageFromContract = "";
-  
+  let blockExplorerAddress = "";
+
   nftId.subscribe((value) => {
     id = value;
+    blockExplorerAddress ="https://l2explorer.hackathon.taiko.xyz/token/" + promptTreeNftAddress[foundry.id] + "/instance/" + id
   });
 
   checkNftOwner();
@@ -178,6 +180,8 @@
     <div class="glass-modal relative bg-gray-700 rounded-lg shadow dark:bg-gray-700">
       <!-- Modal header -->
       <div class="flex items-center justify-between p-5 rounded-t dark:border-gray-600">
+        <a href={blockExplorerAddress} class="text-blue-600 bg-white" target="_blank">Check this NFT on Block Explorer
+        </a>
         <button
           type="button"
           class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
@@ -216,7 +220,10 @@
             <label
               for="message"
               class="block mt-4 mb-2 prompt-list-label text-sm font-medium text-white dark:text-white"
-              >API KEY(<a href="https://beta.dreamstudio.ai/account" class="text-blue-600 bg-white"
+              >API KEY(<a 
+                href="https://beta.dreamstudio.ai/account"
+                class="text-blue-600 bg-white"
+                target="_blank"
                 >Created Account And Get API Key Here!</a
               >)</label
             >
