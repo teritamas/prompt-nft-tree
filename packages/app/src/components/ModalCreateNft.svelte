@@ -12,8 +12,10 @@
     fileUpload,
     getLatestTokenId,
     incrementTokenId,
+    addNftToAccountByTokenId,
+    getNft
   } from "../facades/database";
-  import { nftId, wagmiClient, openModal } from "../stores";
+  import { nftId, wagmiClient, openModal,nftList } from "../stores";
   import { decrypt, encrypt } from "../facades/authorization";
   import type { promptNft } from "../model/promptNft";
   import Loading from "./Loading.svelte";
@@ -23,47 +25,37 @@
   let generativeImage: Blob;
   let loadingIsShow = false;
   let finishedIsShow = false;
-  let encryptedPrompt = "";
   let defaultImageUrl = "";
   let positivePrompt = "";
   let id = 1;
   let isOwn = false;
-
+  let walltaddress = "";
+  let messageFromContract = "";
+  
   nftId.subscribe((value) => {
     id = value;
   });
 
-  let walltaddress = "";
-  let messageFromContract = "";
-
+  checkNftOwner();
+  getLatestTokenId();
   downloadImage(id).then((x) => {
     defaultImageUrl = x;
   });
 
-  wagmiClient.subscribe(async (value) => {
-    const encryptedPrompt = await readEncryptPrompt();
-    walltaddress = value.data?.account;
-    const val = await checkNftOwn(walltaddress, id);
+  function checkNftOwner(){
+    wagmiClient.subscribe(async (value) => {
+      const encryptedPrompt = await readEncryptPrompt();
+      walltaddress = value.data?.account;
+      const val = await checkNftOwn(walltaddress, id);
 
-    if (val.length === 1) {
-      isOwn = true;
-      const decryptedPrompt = await decrypt(encryptedPrompt, val[0].encryptedSymmetricKey);
-      positivePrompt = decryptedPrompt;
-    } else {
-      console.log("このNFTは保有してません！");
-    }
-  });
-
-  function arrayBufferToBinaryString(arrayBuffer) {
-    let binaryString = "";
-    console.warn(arrayBuffer);
-    const bytes = new Uint8Array(arrayBuffer);
-    console.warn(bytes);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-      binaryString += String.fromCharCode(bytes[i]);
-    }
-    return binaryString;
+      if (val.length === 1) {
+        isOwn = true;
+        const decryptedPrompt = await decrypt(encryptedPrompt, val[0].encryptedSymmetricKey);
+        positivePrompt = decryptedPrompt;
+      } else {
+        positivePrompt = "(Prompt Is Encrypted. Lets Purchase NFT.) " + encryptedPrompt;
+      }
+    });
   }
 
   async function readEncryptPrompt() {
@@ -77,11 +69,15 @@
     return data;
   }
 
-  getLatestTokenId();
+  async function purchasedNft(){
+    addNftToAccountByTokenId(walltaddress, id)
+    .then(_=>{}).finally(_=>{
+      checkNftOwner();
+    });
+  }
 
   async function mintNft() {
     loadingIsShow = true;
-
     // 1. 暗号化
     const { encryptedString, encryptedSymmetricKey } = await encrypt(positivePrompt);
     console.log("暗号化完了", encryptedString, encryptedSymmetricKey);
@@ -99,17 +95,36 @@
       });
 
       // トランザクションのリクエスト完了まで待つ
-      setLoading(); // 仮置き、位置調整する
       await writeContract(config);
-      addNft(Number(tokenId), id, encryptedSymmetricKey).then(async (nft) => {
+
+      await addNft(Number(tokenId), id, encryptedSymmetricKey).then(async (nft) => {
         await addNftToAccount(walltaddress, nft as promptNft);
-        console.log("increment Start");
         incrementTokenId().then((_) => {
-          console.log("increment Complete");
+          console.log("Increment Complete");
+        });
+      });
+      closeModal()
+    }).finally(_=>{
+      loadingIsShow = false;
+      getNft().then((_nftList) => {
+        nftList.set(_nftList);
+        _nftList.forEach(async (x) => {
+          await getImg(x.tokenId, _nftList);
         });
       });
     });
-    // });
+  }
+
+  async function getImg(tokenId, _nftList) {
+    downloadImage(tokenId).then((x) => {
+      _nftList.map((y) => {
+        if (y.tokenId == tokenId) {
+          y.imagePath = x;
+        }
+      });
+      // @ts-ignore
+      nftList.set(_nftList);
+    });
   }
 
   async function generate() {
@@ -130,19 +145,14 @@
         };
         img.src = url;
         generativeImage = blob;
-        setLoading();
       })
       .catch((error: any) => {
         console.error(error);
+      }).finally(_=>{
+        loadingIsShow = false;
       });
   }
 
-  function setLoading() {
-    setTimeout(() => {
-      loadingIsShow = false;
-      finishedIsShow = true;
-    }, 5000);
-  }
   function closeModal() {
     openModal.set(false); // storeに値を保存
   }
@@ -161,8 +171,9 @@
   id="extralarge-modal"
   tabindex="-1"
   class="fixed top-0 left-0 right-0 z-50 w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full"
+  style="z-index: 1"
 >
-  <div class="relative w-full max-w-7xl max-h-full">
+  <div class="relative w-full max-w-7xl max-h-full mx-auto">
     <!-- Modal content -->
     <div class="glass-modal relative bg-gray-700 rounded-lg shadow dark:bg-gray-700">
       <!-- Modal header -->
@@ -197,7 +208,6 @@
               >Prompt</label
             >
             <textarea
-              disabled
               id="message"
               rows="3"
               class="block p-1 w-full text-sm glass text-white placeholder-white"
@@ -206,14 +216,13 @@
             <label
               for="message"
               class="block mt-4 mb-2 prompt-list-label text-sm font-medium text-white dark:text-white"
-              >API KEY(<a href="https://beta.dreamstudio.ai/generate" class="text-blue-600 bg-white"
-                >Created Here!</a
+              >API KEY(<a href="https://beta.dreamstudio.ai/account" class="text-blue-600 bg-white"
+                >Created Account And Get API Key Here!</a
               >)</label
             >
             <input
               id="message"
               type="password"
-              disabled
               class="block p-1 w-full text-sm glass text-white placeholder-white"
               bind:value={apiKey}
             />
@@ -237,105 +246,6 @@
             <!--復号化されたプロンプトが入って画像が表示される-->
             <img src={defaultImageUrl} alt="生成された画像" />
           </div>
-          <div class="cols-1">
-            <h3 class="text-xl font-medium text-white">Prompt NFT Tree</h3>
-            <nav class="nav">
-              <ul>
-                <li>
-                  <button
-                    type="button"
-                    class="img-object-fit-radius-modal"
-                    on:click={() => openModal4(3)}
-                  >
-                    <img src="/images/web3tokyo.png" alt="" />
-                  </button>
-                  <ul>
-                    <li>
-                      <button
-                        type="button"
-                        class="img-object-fit-radius-modal"
-                        on:click={() => openModal4(3)}
-                      >
-                        <img src="/images/web3tokyoglobal.png" alt="" />
-                      </button>
-                      <ul>
-                        <li>
-                          <button
-                            type="button"
-                            class="img-object-fit-radius-modal"
-                            on:click={() => openModal4(3)}
-                          >
-                            <img src="/images/web3tokyoglobal2.png" alt="" />
-                          </button>
-                          <ul>
-                            <li>
-                              <button
-                                type="button"
-                                class="img-object-fit-radius-modal"
-                                on:click={() => openModal4(3)}
-                              >
-                                <img src="/images/web3tokyoglobalhappy2.png" alt="" />
-                              </button>
-                              <ul>
-                                <li>
-                                  <button
-                                    type="button"
-                                    class="img-object-fit-radius-modal"
-                                    on:click={() => openModal4(3)}
-                                  >
-                                    <img src="/images/web3tokyoglobalsuccess.png" alt="" />
-                                  </button>
-                                </li>
-                              </ul>
-                            </li>
-                          </ul>
-                        </li>
-                        <li>
-                          <button
-                            type="button"
-                            class="img-object-fit-radius-modal"
-                            on:click={() => openModal4(3)}
-                          >
-                            <img src="/images/web3tokyoglobalprompt.png" alt="" />
-                          </button>
-                          <ul>
-                            <li>
-                              <button
-                                type="button"
-                                class="img-object-fit-radius-modal"
-                                on:click={() => openModal4(3)}
-                              >
-                                <img src="/images/web3tokyoglobalprompt2.png" alt="" />
-                              </button>
-                            </li>
-                          </ul>
-                        </li>
-                      </ul>
-                    </li>
-                    <li>
-                      <button
-                        type="button"
-                        class="img-object-fit-radius-modal"
-                        on:click={() => openModal4(3)}
-                      >
-                        <img src="/images/web3tokyoglobalhappy.png" alt="" />
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        type="button"
-                        class="img-object-fit-radius-modal"
-                        on:click={() => openModal4(3)}
-                      >
-                        <img src="/images/web3tokyoglobal3.png" alt="" />
-                      </button>
-                    </li>
-                  </ul>
-                </li>
-              </ul>
-            </nav>
-            <!--ツリーのプレビュー-->
-          </div>
         </div>
       </div>
       <!-- Modal footer -->
@@ -345,10 +255,10 @@
         {#if !isOwn}
           <!--購入-->
           <button
-            on:click={mintNft}
+            on:click={purchasedNft}
             type="button"
             class="text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-            >Buy NFT</button
+            >Purchased NFT</button
           >
         {/if}
         {#if isOwn}

@@ -4,6 +4,7 @@ import { getStorage, uploadBytes, ref, getBlob, getDownloadURL } from "firebase/
 import { XMLHttpRequest } from "xmlhttprequest";
 import type { promptNft } from "../model/promptNft";
 import type { User } from "../model/user";
+import { nftList } from "../stores";
 
 const firebaseConfig = {
   authDomain: "prompt-tree.firebaseapp.com",
@@ -87,6 +88,26 @@ export function getLatestTokenId() {
         console.error(error);
       });
   });
+}
+
+/**
+ * NFTの購入
+ */
+export async function addNftToAccountByTokenId(walltaddress: string, tokenId: number) {
+  const nftCol = collection(db, "nft");
+  const nft = await getDocs(nftCol).then(async (config) => {
+    return config.docs
+      .filter((doc) => doc.get("tokenId") === tokenId)
+      .map((x) => {
+        return {
+          tokenId: x.get("tokenId"),
+          sourceTokenId: x.get("sourceTokenId"),
+          encryptedSymmetricKey: x.get("encryptedSymmetricKey"),
+        };
+      })[0] as promptNft;
+  });
+
+  await addNftToAccount(walltaddress, nft);
 }
 
 /**
