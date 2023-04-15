@@ -23,7 +23,6 @@
   let generativeImage: Blob;
   let loadingIsShow = false;
   let finishedIsShow = false;
-  let encryptedPrompt = "";
   let defaultImageUrl = "";
   let positivePrompt = "";
   let id = 1;
