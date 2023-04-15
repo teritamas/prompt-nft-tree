@@ -4,9 +4,11 @@
   import { prepareWriteContract, writeContract } from "@wagmi/core";
   import { foundry } from "@wagmi/core/chains";
   import { BigNumber } from "ethers";
+  import { addNft, fileUpload, getLatestTokenId, incrementTokenId } from "../facades/database";
   import { nftId } from "../stores";
 
   let apiKey = "";
+  let generativeImage: Blob;
 
   const nftLists = {
     1: {
@@ -68,18 +70,31 @@
   };
 
   let encryptedPrompt = "";
-  // functions
+  getLatestTokenId()
   async function mintNft() {
-    encryptedPrompt = positivePrompt;
-    const config = await prepareWriteContract({
-      // TODO: encrypted
-      address: promptTreeNftAddress[foundry.id],
-      abi: promptTreeNftABI,
-      functionName: "mintNft",
-      args: [promptTreeNftAddress[foundry.id], encryptedPrompt, BigNumber.from(id)],
+    getLatestTokenId().then(async (tokenId)=>{
+      // APIを叩きすぎると料金が嵩むので、ファイルをアップロード
+      fileUpload(generativeImage, Number(tokenId));
+      encryptedPrompt = positivePrompt;
+
+      console.log("nftに変換します", tokenId, generativeImage)
+      const config = await prepareWriteContract({
+        // TODO: encrypted
+        address: promptTreeNftAddress[foundry.id],
+        abi: promptTreeNftABI,
+        functionName: "mintNft",
+        args: [promptTreeNftAddress[foundry.id], encryptedPrompt, BigNumber.from(id)],
+      });
+      // トランザクションのリクエスト完了まで待つ
+      await writeContract(config).then(_=>{
+        addNft(Number(tokenId), id)
+        .then(_=>{
+          incrementTokenId();
+        });
+      });
+    }).catch(e=>{
+      console.error(e);
     });
-    await writeContract(config);
-    console.log("Comcplete!");
   }
 
   let id = 1;
@@ -89,10 +104,31 @@
   let positivePrompt = "";
 
   async function generate() {
-    await generateAndUpdateNode(
+    generateAndUpdateNode(
       apiKey,
       positivePrompt,
-    )
+    ).then((response: { data: BlobPart }) => {
+      const blob = new Blob([response.data], { type: "image/png" });
+
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+
+      img.onload = function () {
+        URL.revokeObjectURL(url);
+        const targetArea = document.getElementById("generativeImage")!;
+
+        const currentImage = targetArea.firstChild;
+        if (currentImage) {
+          targetArea.removeChild(currentImage);
+        }
+        targetArea.appendChild(img);
+      };
+      img.src = url;
+      generativeImage = blob
+    })
+    .catch((error: any) => {
+      console.error(error);
+    });
   }
 </script>
 
