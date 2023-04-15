@@ -4,9 +4,17 @@
   import { prepareWriteContract, readContract, writeContract } from "@wagmi/core";
   import { foundry } from "@wagmi/core/chains";
   import { BigNumber } from "ethers";
-  import { addNft, addNftToAccount, checkNftOwn, downloadImage, fileUpload, getLatestTokenId, incrementTokenId } from "../facades/database";
-  import { nftId,wagmiClient, openModal } from "../stores";
-  import {decrypt, encrypt } from "../facades/authorization";
+  import {
+    addNft,
+    addNftToAccount,
+    checkNftOwn,
+    downloadImage,
+    fileUpload,
+    getLatestTokenId,
+    incrementTokenId,
+  } from "../facades/database";
+  import { nftId, wagmiClient, openModal } from "../stores";
+  import { decrypt, encrypt } from "../facades/authorization";
   import type { promptNft } from "../model/promptNft";
   import Loading from "./Loading.svelte";
   import Finished from "./Finished.svelte";
@@ -16,96 +24,90 @@
   let loadingIsShow = false;
   let finishedIsShow = false;
   let encryptedPrompt = "";
-  let defaultImageUrl = "";  
+  let defaultImageUrl = "";
   let positivePrompt = "";
   let id = 1;
+  let isOwn = false;
 
   nftId.subscribe((value) => {
     id = value;
   });
 
-  let walltaddress = '';
+  let walltaddress = "";
   let messageFromContract = "";
 
   downloadImage(id).then((x) => {
-    defaultImageUrl = x
+    defaultImageUrl = x;
   });
 
-  wagmiClient.subscribe(async (value)=>{
-    const encryptedPrompt =  await readEncryptPrompt();
+  wagmiClient.subscribe(async (value) => {
+    const encryptedPrompt = await readEncryptPrompt();
     walltaddress = value.data?.account;
     const val = await checkNftOwn(walltaddress, id);
-    
-    console.log(encryptedPrompt)
-    if(val.length === 1){
-      console.warn("NFTを保有しているので復元します", id, encryptedPrompt)
+
+    if (val.length === 1) {
+      isOwn = true;
       const decryptedPrompt = await decrypt(encryptedPrompt, val[0].encryptedSymmetricKey);
-      console.error("復元完了！", decryptedPrompt)
-      positivePrompt = decryptedPrompt
-    }
-    else {
-      console.log("このNFTは保有してません！")
+      positivePrompt = decryptedPrompt;
+    } else {
+      console.log("このNFTは保有してません！");
     }
   });
 
   function arrayBufferToBinaryString(arrayBuffer) {
-  let binaryString = "";
-  console.warn(arrayBuffer)
-  const bytes = new Uint8Array(arrayBuffer);
-  console.warn(bytes)
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binaryString += String.fromCharCode(bytes[i]);
+    let binaryString = "";
+    console.warn(arrayBuffer);
+    const bytes = new Uint8Array(arrayBuffer);
+    console.warn(bytes);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binaryString += String.fromCharCode(bytes[i]);
+    }
+    return binaryString;
   }
-  return binaryString
-}
 
   async function readEncryptPrompt() {
-    messageFromContract = "reset"
+    messageFromContract = "reset";
     const data = await readContract({
       address: promptTreeNftAddress[foundry.id],
       abi: promptTreeNftABI,
       functionName: "getEncryptedPrompt",
-      args: [BigNumber.from(id)]
+      args: [BigNumber.from(id)],
     });
     return data;
   }
 
-  getLatestTokenId()
+  getLatestTokenId();
 
   async function mintNft() {
     loadingIsShow = true;
-    
+
     // 1. 暗号化
-    const {encryptedString, encryptedSymmetricKey} = await encrypt(positivePrompt)
+    const { encryptedString, encryptedSymmetricKey } = await encrypt(positivePrompt);
     console.log("暗号化完了", encryptedString, encryptedSymmetricKey);
 
-    getLatestTokenId().then(async (tokenId)=>{
+    getLatestTokenId().then(async (tokenId) => {
       // APIを叩きすぎると料金が嵩むので、ファイルをアップロード
       fileUpload(generativeImage, Number(tokenId));
 
-      console.log("nftに変換します", encryptedString)        
+      console.log("nftに変換します", encryptedString);
       const config = await prepareWriteContract({
         address: promptTreeNftAddress[foundry.id],
         abi: promptTreeNftABI,
         functionName: "mintNft",
         args: [promptTreeNftAddress[foundry.id], encryptedString.toString(), BigNumber.from(id)],
       });
-      
+
       // トランザクションのリクエスト完了まで待つ
       setLoading(); // 仮置き、位置調整する
       await writeContract(config);
-
-      console.log("DBに登録します", tokenId, encryptedString)        
-      addNft(Number(tokenId), id, encryptedSymmetricKey)
-        .then(async nft=>{
-          await addNftToAccount(walltaddress, nft as promptNft);
-          console.log("increment Start")
-          incrementTokenId().then(_=>{
-            console.log("increment Complete")
-          });
+      addNft(Number(tokenId), id, encryptedSymmetricKey).then(async (nft) => {
+        await addNftToAccount(walltaddress, nft as promptNft);
+        console.log("increment Start");
+        incrementTokenId().then((_) => {
+          console.log("increment Complete");
+        });
       });
-
     });
     // });
   }
@@ -195,6 +197,7 @@
               >Prompt</label
             >
             <textarea
+              disabled
               id="message"
               rows="3"
               class="block p-1 w-full text-sm glass text-white placeholder-white"
@@ -210,15 +213,25 @@
             <input
               id="message"
               type="password"
+              disabled
               class="block p-1 w-full text-sm glass text-white placeholder-white"
               bind:value={apiKey}
             />
-            <button
-              on:click={generate}
-              type="button"
-              class="text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center mt-3"
-              >Generate Image</button
-            >
+            {#if !isOwn}
+              <button
+                type="button"
+                class="text-white bg-gray-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center mt-3"
+                >Generate Image</button
+              >
+            {/if}
+            {#if isOwn}
+              <button
+                on:click={generate}
+                type="button"
+                class="text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center mt-3"
+                >Generate Image</button
+              >
+            {/if}
           </div>
           <div id="generativeImage" class="cols-1">
             <!--復号化されたプロンプトが入って画像が表示される-->
@@ -329,17 +342,28 @@
       <div
         class="flex items-center p-6 space-x-2 border-t border-gray-200 rounded-b dark:border-gray-600"
       >
-        <button
-          on:click={mintNft}
-          type="button"
-          class="text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-          >Create NFT</button
-        >
+        {#if !isOwn}
+          <!--購入-->
+          <button
+            on:click={mintNft}
+            type="button"
+            class="text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+            >Buy NFT</button
+          >
+        {/if}
+        {#if isOwn}
+          <button
+            on:click={mintNft}
+            type="button"
+            class="text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+            >Create NFT</button
+          >
+        {/if}
         <button
           on:click={() => closeModal()}
           type="button"
           class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600"
-          >Decline</button
+          >Back</button
         >
       </div>
     </div>
