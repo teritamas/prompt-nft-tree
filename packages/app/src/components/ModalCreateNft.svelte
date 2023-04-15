@@ -53,7 +53,7 @@
         const decryptedPrompt = await decrypt(encryptedPrompt, val[0].encryptedSymmetricKey);
         positivePrompt = decryptedPrompt;
       } else {
-        console.log("このNFTは保有してません！");
+        positivePrompt = "(Prompt Is Encrypted. Lets Purchase NFT.) " + encryptedPrompt;
       }
     });
   }
@@ -106,7 +106,6 @@
       closeModal()
     }).finally(_=>{
       loadingIsShow = false;
-      finishedIsShow = true;
       getNft().then((_nftList) => {
         nftList.set(_nftList);
         _nftList.forEach(async (x) => {
