@@ -1,7 +1,13 @@
-<script>
-  // @ts-nocheck
-
+<script lang="ts">
+  import { generateAndUpdateNode } from "../facades/generativeAi"
+  import { promptTreeNftABI, promptTreeNftAddress } from "../generated";
+  import { prepareWriteContract, writeContract } from "@wagmi/core";
+  import { foundry } from "@wagmi/core/chains";
+  import { BigNumber } from "ethers";
   import { nftId } from "../stores";
+
+  let apiKey = "";
+
   const nftLists = {
     1: {
       parentId: 1,
@@ -61,10 +67,33 @@
     },
   };
 
+  let encryptedPrompt = "";
+  // functions
+  async function mintNft() {
+    encryptedPrompt = positivePrompt;
+    const config = await prepareWriteContract({
+      // TODO: encrypted
+      address: promptTreeNftAddress[foundry.id],
+      abi: promptTreeNftABI,
+      functionName: "mintNft",
+      args: [promptTreeNftAddress[foundry.id], encryptedPrompt, BigNumber.from(id)],
+    });
+    await writeContract(config);
+    console.log("Comcplete!");
+  }
+
   let id = 1;
   nftId.subscribe((value) => {
     id = value;
   });
+  let positivePrompt = "";
+
+  async function generate() {
+    await generateAndUpdateNode(
+      apiKey,
+      positivePrompt,
+    )
+  }
 </script>
 
 <div
@@ -117,7 +146,7 @@
               id="message"
               rows="3"
               class="block p-1 w-full text-sm glass text-white placeholder-white"
-              value={nftLists[id]["prompt"]}
+              bind:value={positivePrompt}
             />
             <label
               for="message"
@@ -128,10 +157,27 @@
               id="message"
               rows="3"
               class="block p-1 w-full text-sm glass text-white placeholder-white"
-              value={nftLists[id]["negativePrompt"]}
+              bind:value={nftLists[id]["negativePrompt"]}
             />
+            <label
+            for="message"
+            class="block mt-4 mb-2 prompt-list-label text-sm font-medium text-white dark:text-white"
+            >API KEY(<a href="https://beta.dreamstudio.ai/generate">Created Here!</a>)</label
+            >
+            <input
+              id="message"
+              type="password"
+              class="block p-1 w-full text-sm glass text-white placeholder-white"
+              bind:value={apiKey}
+            />
+            <button
+            on:click={generate}
+            type="button"
+            class="text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center mt-3"
+            >Generate Image</button
+          >
           </div>
-          <div class="cols-1">
+          <div id="generativeImage" class="cols-1">
             <img src="/images/{nftLists[id]['imagePath']}.png" alt="" />
           </div>
           <div class="cols-1">
@@ -249,7 +295,7 @@
         class="flex items-center p-6 space-x-2 border-t border-gray-200 rounded-b dark:border-gray-600"
       >
         <button
-          data-modal-hide="extralarge-modal"
+          on:click={mintNft}
           type="button"
           class="text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
           >Create NFT</button
