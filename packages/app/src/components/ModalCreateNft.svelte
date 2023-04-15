@@ -10,7 +10,7 @@
   import type { promptNft } from "../model/promptNft";
   import Loading from "./Loading.svelte";
   import Finished from "./Finished.svelte";
-  
+
   let apiKey = "";
   let generativeImage: Blob;
   let loadingIsShow = false;
@@ -194,7 +194,7 @@
             <!--<img src={_nftList[id]["imagePath"]} alt="生成された画像" />-->
           </div>
           <div class="cols-1">
-            <h3 class="text-xl font-medium text-white">Prompt tree</h3>
+            <h3 class="text-xl font-medium text-white">Prompt NFT Tree</h3>
             <nav class="nav">
               <ul>
                 <li>

@@ -107,7 +107,7 @@
             <img src="/images/{nftLists[id]['imagePath']}.png" alt={nftLists[id]["title"]} />
           </div>
           <div class="cols-1" style="margin: 0 auto;">
-            <h3 class="text-xl font-medium text-white">Prompt tree</h3>
+            <h3 class="text-xl font-medium text-white">Prompt NFT Tree</h3>
             <nav class="nav">
               <ul>
                 <li>
