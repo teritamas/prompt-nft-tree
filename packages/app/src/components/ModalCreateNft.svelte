@@ -177,7 +177,7 @@
 >
   <div class="relative w-full max-w-7xl max-h-full mx-auto">
     <!-- Modal content -->
-    <div class="glass-modal relative bg-gray-700 rounded-lg shadow dark:bg-gray-700">
+    <div class="glass-modal relative bg-gray-700 rounded-lg shadow dark:bg-gray-700" style="background-color: rgb(9 6 6 / 60%);">
       <!-- Modal header -->
       <div class="flex items-center justify-between p-5 rounded-t dark:border-gray-600">
         <a href={blockExplorerAddress} class="text-blue-600 bg-white" target="_blank">Check this NFT on Block Explorer
