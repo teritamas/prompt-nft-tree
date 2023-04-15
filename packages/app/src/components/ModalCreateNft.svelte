@@ -5,11 +5,18 @@
   import { foundry } from "@wagmi/core/chains";
   import { BigNumber } from "ethers";
   import { addNft, fileUpload, getLatestTokenId, incrementTokenId } from "../facades/database";
-  import { nftId } from "../stores";
+  import { nftId,wagmiClient } from "../stores";
   import { litNodeClient, connect, encrypt, decrypt } from "../facades/authorization";
 
   let apiKey = "";
   let generativeImage: Blob;
+
+    
+  let walltaddress = '';
+  wagmiClient.subscribe((value)=>{
+    walltaddress = value.data?.account;
+  });
+
 
   const nftLists = {
     1: {
@@ -72,36 +79,36 @@
 
   let encryptedPrompt = "";
   getLatestTokenId()
-  async function mintNft() {
-    // await encrypt("konaaaaannitichi").then(x=>{
-    //   console.log("暗号化完了", x);
-    //   console.log("複合開始");
-    //   decrypt(x.encryptedString, x.encryptedSymmetricKey).then(y=>{
-    //     console.log("復号完了!", y)
-    //   })
-    // });
-    getLatestTokenId().then(async (tokenId)=>{
-      // APIを叩きすぎると料金が嵩むので、ファイルをアップロード
-      fileUpload(generativeImage, Number(tokenId));
-      encryptedPrompt = positivePrompt;
 
-      console.log("nftに変換します", tokenId, generativeImage)
-      const config = await prepareWriteContract({
-        // TODO: encrypted
-        address: promptTreeNftAddress[foundry.id],
-        abi: promptTreeNftABI,
-        functionName: "mintNft",
-        args: [promptTreeNftAddress[foundry.id], encryptedPrompt, BigNumber.from(id)],
-      });
-      // トランザクションのリクエスト完了まで待つ
-      await writeContract(config).then(_=>{
-        addNft(Number(tokenId), id)
-        .then(_=>{
-          incrementTokenId();
+
+  async function mintNft() {
+    encrypt(positivePrompt).then(x=>{
+      console.log("暗号化完了", x.encryptedString, x.encryptedSymmetricKey);
+      const encryptedSymmetricKey = x.encryptedSymmetricKey;
+      getLatestTokenId().then(async (tokenId)=>{
+        // APIを叩きすぎると料金が嵩むので、ファイルをアップロード
+        fileUpload(generativeImage, Number(tokenId));
+        x.encryptedString.text().then(async x=>{
+          encryptedPrompt = x
+          console.log("nftに変換します", tokenId, encryptedPrompt)
+          const config = await prepareWriteContract({
+            // TODO: encrypted
+            address: promptTreeNftAddress[foundry.id],
+            abi: promptTreeNftABI,
+            functionName: "mintNft",
+            args: [promptTreeNftAddress[foundry.id], encryptedPrompt, BigNumber.from(id)],
+          });
+          // トランザクションのリクエスト完了まで待つ
+          await writeContract(config).then(_=>{
+              addNft(Number(tokenId), id, encryptedSymmetricKey)
+              .then(_=>{
+                incrementTokenId();
+              });
+          });
+        }).catch(e=>{
+          console.error(e);
         });
       });
-    }).catch(e=>{
-      console.error(e);
     });
   }
 

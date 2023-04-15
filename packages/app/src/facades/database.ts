@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, collection, getDocs, addDoc, updateDoc } from "firebase/firestore";
 import { getStorage, uploadBytes, ref, getBlob, getDownloadURL } from "firebase/storage";
 import { XMLHttpRequest } from "xmlhttprequest";
+import type { promptNft } from "../model/promptNft";
 
 const firebaseConfig = {
   authDomain: "prompt-tree.firebaseapp.com",
@@ -34,7 +35,26 @@ export function getNft() {
 /**
  * 描画の高速化のため、NFTのリレーションの情報をFireStoreにも保存
  */
-export function addNft(tokenId: number, sourceTokenId: number) {
+export function addNft(tokenId: number, sourceTokenId: number, encryptedSymmetricKey: string) {
+  const nftCol = collection(db, "nft");
+  const nftDoc: promptNft = {
+    tokenId: tokenId,
+    sourceTokenId: sourceTokenId,
+    encryptedSymmetricKey: encryptedSymmetricKey,
+  };
+  return new Promise((_) => {
+    addDoc(nftCol, nftDoc)
+      .then((_) => console.log("add nft complete!"))
+      .catch((error) => {
+        console.error(error);
+      });
+  });
+}
+
+/**
+ * 描画の高速化のため、NFTのリレーションの情報をFireStoreにも保存
+ */
+export function purchasedUser(tokenId: number, sourceTokenId: number) {
   const nftCol = collection(db, "nft");
   const nftDoc = { tokenId: tokenId, sourceTokenId: sourceTokenId };
   return new Promise((_) => {
@@ -99,7 +119,6 @@ export function downloadImage(tokenId: number) {
       };
       xhr.open("GET", url);
       xhr.send();
-      console.log(url);
       resolve(url);
     });
   });
