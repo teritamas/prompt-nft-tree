@@ -1,77 +1,18 @@
 <script lang="ts">
-  import { generateAndUpdateNode } from "../facades/generativeAi"
+  import { generateAndUpdateNode } from "../facades/generativeAi";
   import { promptTreeNftABI, promptTreeNftAddress } from "../generated";
   import { prepareWriteContract, writeContract } from "@wagmi/core";
   import { foundry } from "@wagmi/core/chains";
   import { BigNumber } from "ethers";
   import { addNft, fileUpload, getLatestTokenId, incrementTokenId } from "../facades/database";
-  import { nftId } from "../stores";
+  import { nftId, nftList, openModal } from "../stores";
   import { litNodeClient, connect, encrypt, decrypt } from "../facades/authorization";
 
   let apiKey = "";
   let generativeImage: Blob;
 
-  const nftLists = {
-    1: {
-      parentId: 1,
-      title: "タイトル1",
-      prompt: "tokyo",
-      negativePrompt: "tokyo web3",
-      imagePath: "web3tokyoglobal",
-    },
-    2: {
-      parentId: 1,
-      title: "タイトル2",
-      prompt: "tokyo love",
-      negativePrompt: "tokyo web3",
-      imagePath: "web3tokyoglobal2",
-    },
-    3: {
-      parentId: 1,
-      title: "タイトル3",
-      prompt: "tokyo happy",
-      negativePrompt: "tokyo web3",
-      imagePath: "web3tokyoglobalhappy2",
-    },
-    4: {
-      parentId: 1,
-      title: "タイトル4",
-      prompt: "tokyo",
-      negativePrompt: "tokyo web3",
-      imagePath: "web3tokyoglobalsuccess",
-    },
-    5: {
-      parentId: 1,
-      title: "タイトル5",
-      prompt: "tokyo love",
-      negativePrompt: "tokyo web3",
-      imagePath: "web3tokyoglobalprompt",
-    },
-    6: {
-      parentId: 1,
-      title: "タイトル6",
-      prompt: "tokyo happy",
-      negativePrompt: "tokyo web3",
-      imagePath: "web3tokyoglobalprompt2",
-    },
-    7: {
-      parentId: 1,
-      title: "タイトル7",
-      prompt: "tokyo love",
-      negativePrompt: "web3tokyoglobalhappy web3",
-      imagePath: "web3tokyoglobalhappy",
-    },
-    8: {
-      parentId: 1,
-      title: "タイトル8",
-      prompt: "tokyo happy",
-      negativePrompt: "web3tokyoglobal3 web3",
-      imagePath: "web3tokyoglobal3",
-    },
-  };
-
   let encryptedPrompt = "";
-  getLatestTokenId()
+  getLatestTokenId();
   async function mintNft() {
     // await encrypt("konaaaaannitichi").then(x=>{
     //   console.log("暗号化完了", x);
@@ -80,29 +21,30 @@
     //     console.log("復号完了!", y)
     //   })
     // });
-    getLatestTokenId().then(async (tokenId)=>{
-      // APIを叩きすぎると料金が嵩むので、ファイルをアップロード
-      fileUpload(generativeImage, Number(tokenId));
-      encryptedPrompt = positivePrompt;
+    getLatestTokenId()
+      .then(async (tokenId) => {
+        // APIを叩きすぎると料金が嵩むので、ファイルをアップロード
+        fileUpload(generativeImage, Number(tokenId));
+        encryptedPrompt = positivePrompt;
 
-      console.log("nftに変換します", tokenId, generativeImage)
-      const config = await prepareWriteContract({
-        // TODO: encrypted
-        address: promptTreeNftAddress[foundry.id],
-        abi: promptTreeNftABI,
-        functionName: "mintNft",
-        args: [promptTreeNftAddress[foundry.id], encryptedPrompt, BigNumber.from(id)],
-      });
-      // トランザクションのリクエスト完了まで待つ
-      await writeContract(config).then(_=>{
-        addNft(Number(tokenId), id)
-        .then(_=>{
-          incrementTokenId();
+        console.log("nftに変換します", tokenId, generativeImage);
+        const config = await prepareWriteContract({
+          // TODO: encrypted
+          address: promptTreeNftAddress[foundry.id],
+          abi: promptTreeNftABI,
+          functionName: "mintNft",
+          args: [promptTreeNftAddress[foundry.id], encryptedPrompt, BigNumber.from(id)],
         });
+        // トランザクションのリクエスト完了まで待つ
+        await writeContract(config).then((_) => {
+          addNft(Number(tokenId), id).then((_) => {
+            incrementTokenId();
+          });
+        });
+      })
+      .catch((e) => {
+        console.error(e);
       });
-    }).catch(e=>{
-      console.error(e);
-    });
   }
 
   let id = 1;
@@ -111,50 +53,58 @@
   });
   let positivePrompt = "";
 
+  // NFT一覧
+  let _nftList: { [x: string]: any }[] = [];
+  nftList.subscribe((value) => {
+    _nftList = value;
+    console.log(_nftList);
+  });
+
+  function closeModal() {
+    openModal.set(false); // storeに値を保存
+  }
+
   async function generate() {
-    generateAndUpdateNode(
-      apiKey,
-      positivePrompt,
-    ).then((response: { data: BlobPart }) => {
-      const blob = new Blob([response.data], { type: "image/png" });
+    generateAndUpdateNode(apiKey, positivePrompt)
+      .then((response: { data: BlobPart }) => {
+        const blob = new Blob([response.data], { type: "image/png" });
 
-      const url = URL.createObjectURL(blob);
-      const img = new Image();
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
 
-      img.onload = function () {
-        URL.revokeObjectURL(url);
-        const targetArea = document.getElementById("generativeImage")!;
+        img.onload = function () {
+          URL.revokeObjectURL(url);
+          const targetArea = document.getElementById("generativeImage")!;
 
-        const currentImage = targetArea.firstChild;
-        if (currentImage) {
-          targetArea.removeChild(currentImage);
-        }
-        targetArea.appendChild(img);
-      };
-      img.src = url;
-      generativeImage = blob
-    })
-    .catch((error: any) => {
-      console.error(error);
-    });
+          const currentImage = targetArea.firstChild;
+          if (currentImage) {
+            targetArea.removeChild(currentImage);
+          }
+          targetArea.appendChild(img);
+        };
+        img.src = url;
+        generativeImage = blob;
+      })
+      .catch((error: any) => {
+        console.error(error);
+      });
   }
 </script>
 
 <div
   id="extralarge-modal"
   tabindex="-1"
-  class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full"
+  class="fixed top-0 left-0 right-0 z-50 w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full"
 >
   <div class="relative w-full max-w-7xl max-h-full">
     <!-- Modal content -->
     <div class="glass-modal relative bg-gray-700 rounded-lg shadow dark:bg-gray-700">
       <!-- Modal header -->
-      <div class="flex items-center justify-between p-5 border-b rounded-t dark:border-gray-600">
-        <h3 class="text-xl font-medium text-white">{nftLists[id]["title"]}</h3>
+      <div class="flex items-center justify-between p-5 rounded-t dark:border-gray-600">
         <button
           type="button"
           class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
-          data-modal-hide="extralarge-modal"
+          on:click={() => closeModal()}
         >
           <svg
             aria-hidden="true"
@@ -173,17 +123,11 @@
       </div>
       <!-- Modal body -->
       <div class="p-6 space-y-6">
-        <h3 class="text-white">NFT</h3>
-        <p class="text-base text-white text-gray-500 dark:text-gray-400">
-          With less than a month to go before the European Union enacts new consumer privacy laws
-          for its citizens, companies around the world are updating their terms of service
-          agreements to comply.
-        </p>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div class="cols-2">
             <label
               for="message"
-              class="block prompt-list-label mt-4 mb-2 text-sm font-medium text-white dark:text-white"
+              class="block prompt-list-label mb-2 text-sm font-medium text-white dark:text-white"
               >Prompt</label
             >
             <textarea
@@ -195,18 +139,9 @@
             <label
               for="message"
               class="block mt-4 mb-2 prompt-list-label text-sm font-medium text-white dark:text-white"
-              >Negative Prompt</label
-            >
-            <textarea
-              id="message"
-              rows="3"
-              class="block p-1 w-full text-sm glass text-white placeholder-white"
-              bind:value={nftLists[id]["negativePrompt"]}
-            />
-            <label
-            for="message"
-            class="block mt-4 mb-2 prompt-list-label text-sm font-medium text-white dark:text-white"
-            >API KEY(<a href="https://beta.dreamstudio.ai/generate">Created Here!</a>)</label
+              >API KEY(<a href="https://beta.dreamstudio.ai/generate" class="text-blue-600 bg-white"
+                >Created Here!</a
+              >)</label
             >
             <input
               id="message"
@@ -215,14 +150,15 @@
               bind:value={apiKey}
             />
             <button
-            on:click={generate}
-            type="button"
-            class="text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center mt-3"
-            >Generate Image</button
-          >
+              on:click={generate}
+              type="button"
+              class="text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center mt-3"
+              >Generate Image</button
+            >
           </div>
           <div id="generativeImage" class="cols-1">
-            <img src="/images/{nftLists[id]['imagePath']}.png" alt="" />
+            <!--復号化されたプロンプトが入って画像が表示される-->
+            <!--<img src={_nftList[id]["imagePath"]} alt="生成された画像" />-->
           </div>
           <div class="cols-1">
             <h3 class="text-xl font-medium text-white">Prompt tree</h3>
@@ -345,7 +281,7 @@
           >Create NFT</button
         >
         <button
-          data-modal-hide="extralarge-modal"
+          on:click={() => closeModal()}
           type="button"
           class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600"
           >Decline</button
