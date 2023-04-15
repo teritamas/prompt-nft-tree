@@ -4,14 +4,24 @@
   import FirstViewTree from "./FirstViewTree.svelte";
   import ModalCreateNft from "./ModalCreateNft.svelte";
   import CreatedNftLists from "./CreatedNftLists.svelte";
-  import ModalBuyNft from "./ModalBuyNft.svelte";
+
+  // variables
+  let encryptedPrompt = "";
+  let messageFromContract = "";
+  let tokenId = "";
+
   import { nftId } from "../stores";
+  import { openModal } from "../stores";
   let countValue;
 
   nftId.subscribe((value) => {
     countValue = value;
   });
 
+  let openModalFlag = false;
+  openModal.subscribe((value) => {
+    openModalFlag = value;
+  });
   // async function readMessage() {
   //   messageFromContract = "reset";
   //   const data = await readContract({
@@ -68,9 +78,9 @@
     </div>
     <!--modal-->
     <!--modalを二つのコンポーネントにわけないで、コンポーネント一個で条件分岐するほうがいい-->
-    <ModalCreateNft />
-    <ModalBuyNft />
+    {#if openModalFlag}
+      <ModalCreateNft />
+    {/if}
     <!--modal-->
   </div>
 </section>
-
