@@ -10,6 +10,9 @@
   -webkit-transition: all ease 0.4s;
   -moz-transition: all ease 0.4s;
   transition: all ease 0.4s;
+  --w3m-color-overlay: rgba(255,255,255,0.3);
+  /*ヘッダーを透明にするために定義変更した。元は以下*/
+  /*rgba(0,0,0,0.1);*/
 }
 
 html,
@@ -31,7 +34,6 @@ body {
 
 #body {
   position: absolute;
-  padding: 5rem;
   left: 0;
   right: 0;
   margin: auto;
@@ -203,4 +205,8 @@ h1 {
   content: "●";
   color: rgba(63, 131, 248, 0.5);
   padding-right: 0.5rem;
+}
+
+.p-5rem {
+    padding: 5rem;
 }

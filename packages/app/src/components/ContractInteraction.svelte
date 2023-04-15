@@ -10,8 +10,8 @@
   import CreatedNftLists from "./CreatedNftLists.svelte";
   import ModalBuyNft from "./ModalBuyNft.svelte";
 
-  import { generate } from "../facades/generativeAi"
-  
+  import { generate } from "../facades/generativeAi";
+
   // variables
   let encryptedPrompt = "";
   let messageFromContract = "";
@@ -51,11 +51,8 @@
   }
 
   async function generateImage() {
-    const image = generate(
-      apiKey,
-      prompt
-    )
-    console.log(image)
+    const image = generate(apiKey, prompt);
+    console.log(image);
     document.getElementById("generativeImage")!.appendChild(image);
   }
 </script>
@@ -75,13 +72,13 @@
 </section>-->
 
 <div id="bg" />
-<section id="body">
+<section id="body" class="p-1 md:p-5rem">
   <div class="">
-    <div class="cols-2 grid grid-cols-1 md:grid-cols-3">
+    <div class="cols-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
       <div class="col-span-2" style="margin: 0 auto;">
         <FirstViewTree />
       </div>
-      <div>
+      <div class="col-span-2">
         <FirstViewTitle />
       </div>
     </div>
@@ -125,6 +122,6 @@
     <input type="password" placeholder="API Key" bind:value={apiKey} />
     <input type="text" placeholder="Prompt sample" bind:value={prompt} />
     <input type="submit" value="Generate Image" on:click={generateImage} />
-    <div id="generativeImage"></div>
+    <div id="generativeImage" />
   </form>
 </section>
