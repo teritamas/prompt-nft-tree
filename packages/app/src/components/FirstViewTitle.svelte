@@ -21,4 +21,13 @@
   prompts. Rewards are paid to developers each time the prompt is reused. Create an NFT with LIT
   encryption technology. That is able to Hold the prompt more safety. Tracing the prompt's purchase
   history with blockchain technology. That makes us to watch the prompt's growth.
+  <br><br>
+  <strong>Usage</strong><br>
+  1. Get started with test coins(<a href="https://sepolia-faucet.pk910.de/" class="text-blue-600 bg-white">Receive Ether on Sepolia</a>)
+  <br>
+  2. Get API key for image generation AI(<a href="https://beta.dreamstudio.ai/account" class="text-blue-600 bg-white">Dreamstudio AI</a>)
+  <br>
+  3. Select an image from the gallery and purchase it via the "Purchased NFT" button (free for demo!)
+  <br>
+  4. Type any word you like in the prompt area, generate an image, and issue NFTs at will!
 </p>
