@@ -48,7 +48,7 @@ export function addNft(tokenId: number, sourceTokenId: number, encryptedSymmetri
     addDoc(nftCol, nftDoc)
       .then((_) => {
         console.log("add nft complete!");
-        resolve(_);
+        resolve(nftDoc);
       })
       .catch((error) => {
         console.error(error);
@@ -114,6 +114,57 @@ export async function createAccount(walletAddress: string) {
 }
 
 /**
+ * NFTを所有しているかを確認
+ */
+export async function checkNftOwn(walletAddress: string, tokenId: number) {
+  const accountCol = collection(db, "account");
+
+  const account = await getDocs(accountCol).then(async (config) => {
+    return config.docs
+      .filter((doc) => doc.get("walletAddress") === walletAddress)
+      .map((x) => {
+        return {
+          walletAddress: x.get("walletAddress"),
+          ownNfts: x.get("ownNfts"),
+        };
+      })[0] as User;
+  });
+
+  // 保有しているかを確認
+  return account ? account.ownNfts.filter((x) => x.tokenId === tokenId) : [];
+}
+
+/**
+ * アカウントにNFTを紐付け
+ */
+export async function addNftToAccount(walletAddress: string, nft: promptNft) {
+  await createAccount(walletAddress); // アカウントが存在するかチェック
+  const accountCol = collection(db, "account");
+
+  await getDocs(accountCol).then(async (config) => {
+    const filteredSnapshot = config.docs.filter(
+      (doc) => doc.get("walletAddress") === walletAddress
+    );
+    const mappedTargetAccount = filteredSnapshot.map((x) => {
+      return {
+        walletAddress: x.get("walletAddress"),
+        ownNfts: x.get("ownNfts"),
+      };
+    });
+
+    // NFTを追加
+    const account = { ...mappedTargetAccount[0] } as User;
+    account.ownNfts.push(nft);
+
+    // 更新
+    const targetAccountRef = filteredSnapshot[0].ref;
+    await updateDoc(targetAccountRef, {
+      ownNfts: account.ownNfts,
+    });
+  });
+}
+
+/**
  * tokenIdのインクリメント
  */
 export function incrementTokenId() {
@@ -124,8 +175,8 @@ export function incrementTokenId() {
       .then(async (config) => {
         console.log("incrementTokenId");
         const id = config.docs.filter((doc) => doc.id === "develop").map((x) => x.get("tokenId"));
-        const document = config.docs.filter((doc) => doc.id === "develop")[0].ref;
-        await updateDoc(document, {
+        const configColRef = config.docs.filter((doc) => doc.id === "develop")[0].ref;
+        await updateDoc(configColRef, {
           tokenId: Number(id) + 1,
         });
       })

@@ -4,17 +4,27 @@
   import { prepareWriteContract, writeContract } from "@wagmi/core";
   import { foundry } from "@wagmi/core/chains";
   import { BigNumber } from "ethers";
-  import { addNft, fileUpload, getLatestTokenId, incrementTokenId } from "../facades/database";
+  import { addNft, addNftToAccount, checkNftOwn, fileUpload, getLatestTokenId, incrementTokenId } from "../facades/database";
   import { nftId,wagmiClient } from "../stores";
   import { litNodeClient, connect, encrypt, decrypt } from "../facades/authorization";
+    import type { promptNft } from "../model/promptNft";
 
   let apiKey = "";
   let generativeImage: Blob;
 
     
   let walltaddress = '';
-  wagmiClient.subscribe((value)=>{
+  wagmiClient.subscribe(async (value)=>{
     walltaddress = value.data?.account;
+    const val = await checkNftOwn(walltaddress, 19);
+    console.log(val);
+
+    if(val.length === 1){
+      console.log(val[0]);
+    }
+    else {
+      console.log("このNFTは保有してません！")
+    }
   });
 
 
@@ -102,8 +112,10 @@
         
         // トランザクションのリクエスト完了まで待つ
         await writeContract(config);
+
         addNft(Number(tokenId), id, encryptedSymmetricKey)
-          .then(_=>{
+          .then(async nft=>{
+            await addNftToAccount(walltaddress, nft as promptNft);
             console.log("increment Start")
             incrementTokenId().then(_=>{
               console.log("increment Complete")
