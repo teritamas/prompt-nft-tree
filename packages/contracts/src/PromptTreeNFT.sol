@@ -10,7 +10,7 @@ contract PromptTreeNFT is ERC721 {
     mapping(uint256 => uint256) private _sourceNftId;
 
     // Encrypted prompt
-    mapping(uint256 => string) private _encryptedPrompts;
+    mapping(uint256 => bytes) private _encryptedPrompts;
 
     constructor() ERC721("PromptTreeNFT", "PRMPTTREE") {}
 
@@ -27,7 +27,7 @@ contract PromptTreeNFT is ERC721 {
         _mint(ownerAddress, newTokenId);
 
         _setSourceNftTokenId(newTokenId, sourceNftTokenId);
-        _setEncryptedPrompt(newTokenId, encryptedPrompts);
+        _setEncryptedPrompt(newTokenId, bytes(encryptedPrompts));
     }
 
     /**
@@ -40,7 +40,7 @@ contract PromptTreeNFT is ERC721 {
     /**
      * Set Encytped Prompt
      */ 
-    function _setEncryptedPrompt(uint256 newTokenId, string memory encryptedPrompts) private {
+    function _setEncryptedPrompt(uint256 newTokenId, bytes memory encryptedPrompts) private {
         _encryptedPrompts[newTokenId] = encryptedPrompts;
     }
 
@@ -56,6 +56,6 @@ contract PromptTreeNFT is ERC721 {
      * Get Token Encrypted Prompt
      */
     function getEncryptedPrompt(uint256 tokneId) public view returns(string memory){
-        return _encryptedPrompts[tokneId];
+        return string(_encryptedPrompts[tokneId]);
     }
 }

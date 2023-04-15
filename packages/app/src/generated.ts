@@ -951,7 +951,7 @@ export const iMulticall3ABI = [
 // PromptTreeNFT
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 export const promptTreeNftAddress = {
-  31337: "0x3D904016E0CEDf61e08cB0D7342C2e558444A80b",
+  31337: "0x849BC7f436EB06C208f0B28b13d970c761cFF24a",
 } as const;
 
 export const promptTreeNftABI = [

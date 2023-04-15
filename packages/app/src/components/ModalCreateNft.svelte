@@ -1,12 +1,12 @@
 <script lang="ts">
   import { generateAndUpdateNode } from "../facades/generativeAi";
   import { promptTreeNftABI, promptTreeNftAddress } from "../generated";
-  import { prepareWriteContract, writeContract } from "@wagmi/core";
+  import { prepareWriteContract, readContract, writeContract } from "@wagmi/core";
   import { foundry } from "@wagmi/core/chains";
   import { BigNumber } from "ethers";
-  import { addNft, addNftToAccount, checkNftOwn, fileUpload, getLatestTokenId, incrementTokenId } from "../facades/database";
+  import { addNft, addNftToAccount, checkNftOwn, downloadImage, fileUpload, getLatestTokenId, incrementTokenId } from "../facades/database";
   import { nftId,wagmiClient, openModal } from "../stores";
-  import {encrypt } from "../facades/authorization";
+  import {decrypt, encrypt } from "../facades/authorization";
   import type { promptNft } from "../model/promptNft";
   import Loading from "./Loading.svelte";
   import Finished from "./Finished.svelte";
@@ -16,20 +16,60 @@
   let loadingIsShow = false;
   let finishedIsShow = false;
   let encryptedPrompt = "";
-    
-  let walltaddress = '';
-  wagmiClient.subscribe(async (value)=>{
-    walltaddress = value.data?.account;
-    const val = await checkNftOwn(walltaddress, 19);
-    console.log(val);
+  let defaultImageUrl = "";  
+  let positivePrompt = "";
+  let id = 1;
 
+  nftId.subscribe((value) => {
+    id = value;
+  });
+
+  let walltaddress = '';
+  let messageFromContract = "";
+
+  downloadImage(id).then((x) => {
+    defaultImageUrl = x
+  });
+
+  wagmiClient.subscribe(async (value)=>{
+    const encryptedPrompt =  await readEncryptPrompt();
+    walltaddress = value.data?.account;
+    const val = await checkNftOwn(walltaddress, id);
+    
+    console.log(encryptedPrompt)
     if(val.length === 1){
-      console.log(val[0]);
+      console.warn("NFTを保有しているので復元します", id, encryptedPrompt)
+      const decryptedPrompt = await decrypt(encryptedPrompt, val[0].encryptedSymmetricKey);
+      console.error("復元完了！", decryptedPrompt)
+      positivePrompt = decryptedPrompt
     }
     else {
       console.log("このNFTは保有してません！")
     }
   });
+
+  function arrayBufferToBinaryString(arrayBuffer) {
+  let binaryString = "";
+  console.warn(arrayBuffer)
+  const bytes = new Uint8Array(arrayBuffer);
+  console.warn(bytes)
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binaryString += String.fromCharCode(bytes[i]);
+  }
+  return binaryString
+}
+
+  async function readEncryptPrompt() {
+    messageFromContract = "reset"
+    const data = await readContract({
+      address: promptTreeNftAddress[foundry.id],
+      abi: promptTreeNftABI,
+      functionName: "getEncryptedPrompt",
+      args: [BigNumber.from(id)]
+    });
+    return data;
+  }
 
   getLatestTokenId()
 
@@ -43,41 +83,32 @@
     getLatestTokenId().then(async (tokenId)=>{
       // APIを叩きすぎると料金が嵩むので、ファイルをアップロード
       fileUpload(generativeImage, Number(tokenId));
-      encryptedString.text().then(async x=>{
-        encryptedPrompt = x
-        console.log("nftに変換します", tokenId, encryptedPrompt)        
-        const config = await prepareWriteContract({
-          // TODO: encrypted
-          address: promptTreeNftAddress[foundry.id],
-          abi: promptTreeNftABI,
-          functionName: "mintNft",
-          args: [promptTreeNftAddress[foundry.id], encryptedPrompt, BigNumber.from(id)],
-        });
-        
-        // トランザクションのリクエスト完了まで待つ
-        setLoading(); // 仮置き、位置調整する
-        await writeContract(config);
 
-        addNft(Number(tokenId), id, encryptedSymmetricKey)
-          .then(async nft=>{
-            await addNftToAccount(walltaddress, nft as promptNft);
-            console.log("increment Start")
-            incrementTokenId().then(_=>{
-              console.log("increment Complete")
-            });
-        });
-      }).catch(e=>{
-        console.error(e);
+      console.log("nftに変換します", encryptedString)        
+      const config = await prepareWriteContract({
+        address: promptTreeNftAddress[foundry.id],
+        abi: promptTreeNftABI,
+        functionName: "mintNft",
+        args: [promptTreeNftAddress[foundry.id], encryptedString.toString(), BigNumber.from(id)],
       });
+      
+      // トランザクションのリクエスト完了まで待つ
+      setLoading(); // 仮置き、位置調整する
+      await writeContract(config);
+
+      console.log("DBに登録します", tokenId, encryptedString)        
+      addNft(Number(tokenId), id, encryptedSymmetricKey)
+        .then(async nft=>{
+          await addNftToAccount(walltaddress, nft as promptNft);
+          console.log("increment Start")
+          incrementTokenId().then(_=>{
+            console.log("increment Complete")
+          });
+      });
+
     });
     // });
   }
-
-  let id = 1;
-  nftId.subscribe((value) => {
-    id = value;
-  });
-  let positivePrompt = "";
 
   async function generate() {
     loadingIsShow = true;
@@ -108,7 +139,7 @@
     setTimeout(() => {
       loadingIsShow = false;
       finishedIsShow = true;
-    }, 10000);
+    }, 5000);
   }
   function closeModal() {
     openModal.set(false); // storeに値を保存
@@ -191,7 +222,7 @@
           </div>
           <div id="generativeImage" class="cols-1">
             <!--復号化されたプロンプトが入って画像が表示される-->
-            <!--<img src={_nftList[id]["imagePath"]} alt="生成された画像" />-->
+            <img src={defaultImageUrl} alt="生成された画像" />
           </div>
           <div class="cols-1">
             <h3 class="text-xl font-medium text-white">Prompt NFT Tree</h3>
