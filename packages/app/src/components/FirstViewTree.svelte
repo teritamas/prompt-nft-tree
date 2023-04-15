@@ -1,6 +1,5 @@
 <script lang="ts">
   import { nftId, openModal } from "../stores";
-
   // 同じ変数名はつけられないらしい。
   // とりあえず変数名変えたけど、親コンポーネントのメソッド叩くように変更する
   function openModal3(value: number) {

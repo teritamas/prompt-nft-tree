@@ -4,6 +4,12 @@
   import FirstViewTree from "./FirstViewTree.svelte";
   import ModalCreateNft from "./ModalCreateNft.svelte";
   import CreatedNftLists from "./CreatedNftLists.svelte";
+
+  // variables
+  let encryptedPrompt = "";
+  let messageFromContract = "";
+  let tokenId = "";
+
   import { nftId } from "../stores";
   import { openModal } from "../stores";
   let countValue;

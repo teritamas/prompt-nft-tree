@@ -5,15 +5,20 @@
   import { foundry } from "@wagmi/core/chains";
   import { BigNumber } from "ethers";
   import { addNft, fileUpload, getLatestTokenId, incrementTokenId } from "../facades/database";
-  import { nftId, nftList, openModal } from "../stores";
+  import { nftId, openModal } from "../stores";
   import { litNodeClient, connect, encrypt, decrypt } from "../facades/authorization";
+  import Loading from "./Loading.svelte";
+  import Finished from "./Finished.svelte";
 
   let apiKey = "";
   let generativeImage: Blob;
-
+  let loadingIsShow = false;
+  let finishedIsShow = false;
   let encryptedPrompt = "";
   getLatestTokenId();
+
   async function mintNft() {
+    loadingIsShow = true;
     // await encrypt("konaaaaannitichi").then(x=>{
     //   console.log("暗号化完了", x);
     //   console.log("複合開始");
@@ -26,7 +31,6 @@
         // APIを叩きすぎると料金が嵩むので、ファイルをアップロード
         fileUpload(generativeImage, Number(tokenId));
         encryptedPrompt = positivePrompt;
-
         console.log("nftに変換します", tokenId, generativeImage);
         const config = await prepareWriteContract({
           // TODO: encrypted
@@ -35,6 +39,8 @@
           functionName: "mintNft",
           args: [promptTreeNftAddress[foundry.id], encryptedPrompt, BigNumber.from(id)],
         });
+
+        setLoading(); //k仮置き、位置調整する
         // トランザクションのリクエスト完了まで待つ
         await writeContract(config).then((_) => {
           addNft(Number(tokenId), id).then((_) => {
@@ -46,36 +52,21 @@
         console.error(e);
       });
   }
-
   let id = 1;
   nftId.subscribe((value) => {
     id = value;
   });
   let positivePrompt = "";
-
-  // NFT一覧
-  let _nftList: { [x: string]: any }[] = [];
-  nftList.subscribe((value) => {
-    _nftList = value;
-    console.log(_nftList);
-  });
-
-  function closeModal() {
-    openModal.set(false); // storeに値を保存
-  }
-
   async function generate() {
+    loadingIsShow = true;
     generateAndUpdateNode(apiKey, positivePrompt)
       .then((response: { data: BlobPart }) => {
         const blob = new Blob([response.data], { type: "image/png" });
-
         const url = URL.createObjectURL(blob);
         const img = new Image();
-
         img.onload = function () {
           URL.revokeObjectURL(url);
           const targetArea = document.getElementById("generativeImage")!;
-
           const currentImage = targetArea.firstChild;
           if (currentImage) {
             targetArea.removeChild(currentImage);
@@ -84,10 +75,30 @@
         };
         img.src = url;
         generativeImage = blob;
+        setLoading();
       })
       .catch((error: any) => {
         console.error(error);
       });
+  }
+
+  function setLoading() {
+    setTimeout(() => {
+      loadingIsShow = false;
+      finishedIsShow = true;
+    }, 10000);
+  }
+  function closeModal() {
+    openModal.set(false); // storeに値を保存
+  }
+  function closeFinished() {
+    finishedIsShow = false;
+  }
+  // 同じ変数名はつけられないらしい。
+  // とりあえず変数名変えたけど、親コンポーネントのメソッド叩くように変更する
+  function openModal4(value: number) {
+    nftId.set(value); // storeに値を保存
+    openModal.set(true); // storeに値を保存
   }
 </script>
 
@@ -168,8 +179,7 @@
                   <button
                     type="button"
                     class="img-object-fit-radius-modal"
-                    data-modal-target="extralarge-modal"
-                    data-modal-toggle="extralarge-modal"
+                    on:click={() => openModal4(3)}
                   >
                     <img src="/images/web3tokyo.png" alt="" />
                   </button>
@@ -178,8 +188,7 @@
                       <button
                         type="button"
                         class="img-object-fit-radius-modal"
-                        data-modal-target="extralarge-modal"
-                        data-modal-toggle="extralarge-modal"
+                        on:click={() => openModal4(3)}
                       >
                         <img src="/images/web3tokyoglobal.png" alt="" />
                       </button>
@@ -188,8 +197,7 @@
                           <button
                             type="button"
                             class="img-object-fit-radius-modal"
-                            data-modal-target="extralarge-modal"
-                            data-modal-toggle="extralarge-modal"
+                            on:click={() => openModal4(3)}
                           >
                             <img src="/images/web3tokyoglobal2.png" alt="" />
                           </button>
@@ -198,8 +206,7 @@
                               <button
                                 type="button"
                                 class="img-object-fit-radius-modal"
-                                data-modal-target="extralarge-modal"
-                                data-modal-toggle="extralarge-modal"
+                                on:click={() => openModal4(3)}
                               >
                                 <img src="/images/web3tokyoglobalhappy2.png" alt="" />
                               </button>
@@ -208,8 +215,7 @@
                                   <button
                                     type="button"
                                     class="img-object-fit-radius-modal"
-                                    data-modal-target="extralarge-modal"
-                                    data-modal-toggle="extralarge-modal"
+                                    on:click={() => openModal4(3)}
                                   >
                                     <img src="/images/web3tokyoglobalsuccess.png" alt="" />
                                   </button>
@@ -222,8 +228,7 @@
                           <button
                             type="button"
                             class="img-object-fit-radius-modal"
-                            data-modal-target="extralarge-modal"
-                            data-modal-toggle="extralarge-modal"
+                            on:click={() => openModal4(3)}
                           >
                             <img src="/images/web3tokyoglobalprompt.png" alt="" />
                           </button>
@@ -232,8 +237,7 @@
                               <button
                                 type="button"
                                 class="img-object-fit-radius-modal"
-                                data-modal-target="extralarge-modal"
-                                data-modal-toggle="extralarge-modal"
+                                on:click={() => openModal4(3)}
                               >
                                 <img src="/images/web3tokyoglobalprompt2.png" alt="" />
                               </button>
@@ -246,8 +250,7 @@
                       <button
                         type="button"
                         class="img-object-fit-radius-modal"
-                        data-modal-target="extralarge-modal"
-                        data-modal-toggle="extralarge-modal"
+                        on:click={() => openModal4(3)}
                       >
                         <img src="/images/web3tokyoglobalhappy.png" alt="" />
                       </button>
@@ -256,8 +259,7 @@
                       <button
                         type="button"
                         class="img-object-fit-radius-modal"
-                        data-modal-target="extralarge-modal"
-                        data-modal-toggle="extralarge-modal"
+                        on:click={() => openModal4(3)}
                       >
                         <img src="/images/web3tokyoglobal3.png" alt="" />
                       </button>
@@ -290,3 +292,9 @@
     </div>
   </div>
 </div>
+{#if loadingIsShow}
+  <Loading />
+{/if}
+{#if finishedIsShow}
+  <Finished {closeFinished} />
+{/if}

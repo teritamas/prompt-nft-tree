@@ -175,17 +175,17 @@ h1 {
     z-index: 11;
   }
 
-.glass-modal {
-  width: 100%;
-  padding: 30px;
-  background-color: rgba(255, 255, 255, 0.1); /* 背景色 */
-  border: 1px solid rgba(255, 255, 255, 0.4); /* ボーダー */
-  border-right-color: rgba(255, 255, 255, 0.2);
-  border-bottom-color: rgba(255, 255, 255, 0.2);
-  border-radius: 15px;
-  -webkit-backdrop-filter: blur(20px); /* ぼかしエフェクト */
-  backdrop-filter: blur(20px);
-}
+  .glass-modal {
+    width: 100%;
+    padding: 30px;
+    background-color: rgba(255, 255, 255, 0.1); /* 背景色 */
+    border: 1px solid rgba(255, 255, 255, 0.4); /* ボーダー */
+    border-right-color: rgba(255, 255, 255, 0.2);
+    border-bottom-color: rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    -webkit-backdrop-filter: blur(20px); /* ぼかしエフェクト */
+    backdrop-filter: blur(20px);
+  }
 
 /* ガラス本体 */
 .glass {
