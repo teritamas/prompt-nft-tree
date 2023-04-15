@@ -10,7 +10,6 @@
   import CreatedNftLists from "./CreatedNftLists.svelte";
   import ModalBuyNft from "./ModalBuyNft.svelte";
 
-  import { generate } from "../facades/generativeAi"
   
   // variables
   let encryptedPrompt = "";
@@ -23,20 +22,7 @@
   nftId.subscribe((value) => {
     countValue = value;
   });
-  let prompt = "";
-  let apiKey = "";
 
-  // functions
-  async function mintNft() {
-    const config = await prepareWriteContract({
-      address: promptTreeNftAddress[foundry.id],
-      abi: promptTreeNftABI,
-      functionName: "mintNft",
-      args: [promptTreeNftAddress[foundry.id], encryptedPrompt, BigNumber.from(0)],
-    });
-    await writeContract(config);
-    console.log("Complete!");
-  }
 
   async function readMessage() {
     messageFromContract = "reset";
@@ -48,15 +34,6 @@
     });
     console.log(data);
     messageFromContract = data;
-  }
-
-  async function generateImage() {
-    const image = generate(
-      apiKey,
-      prompt
-    )
-    console.log(image)
-    document.getElementById("generativeImage")!.appendChild(image);
   }
 </script>
 
@@ -121,10 +98,5 @@
     <ModalBuyNft />
     <!--modal-->
   </div>
-  <form>
-    <input type="password" placeholder="API Key" bind:value={apiKey} />
-    <input type="text" placeholder="Prompt sample" bind:value={prompt} />
-    <input type="submit" value="Generate Image" on:click={generateImage} />
-    <div id="generativeImage"></div>
-  </form>
 </section>
+
