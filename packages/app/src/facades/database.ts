@@ -1,23 +1,22 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, getDocs, addDoc, updateDoc } from "firebase/firestore";
 import { getStorage, uploadBytes, ref } from "firebase/storage";
-// TODO: Replace the following with your app's Firebase project configuration
+
 const firebaseConfig = {
-  // apiKey: "API_KEY",
   authDomain: "prompt-tree.firebaseapp.com",
   databaseURL: "https://prompt-tree.firebaseio.com",
   projectId: "prompt-tree",
   storageBucket: "prompt-tree.appspot.com",
   messagingSenderId: "",
-  appId: "APP_ID",
-  measurementId: "G-MEASUREMENT_ID",
+  appId: "",
+  measurementId: "",
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-export function getNft(tokenId: string) {
+export function getNft() {
   const nftCol = collection(db, "nft");
   return new Promise((resolve) => {
     getDocs(nftCol)

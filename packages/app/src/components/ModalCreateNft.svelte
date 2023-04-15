@@ -6,6 +6,7 @@
   import { BigNumber } from "ethers";
   import { addNft, fileUpload, getLatestTokenId, incrementTokenId } from "../facades/database";
   import { nftId } from "../stores";
+  import { litNodeClient, connect, encrypt, decrypt } from "../facades/authorization";
 
   let apiKey = "";
   let generativeImage: Blob;
@@ -72,6 +73,13 @@
   let encryptedPrompt = "";
   getLatestTokenId()
   async function mintNft() {
+    // await encrypt("konaaaaannitichi").then(x=>{
+    //   console.log("暗号化完了", x);
+    //   console.log("複合開始");
+    //   decrypt(x.encryptedString, x.encryptedSymmetricKey).then(y=>{
+    //     console.log("復号完了!", y)
+    //   })
+    // });
     getLatestTokenId().then(async (tokenId)=>{
       // APIを叩きすぎると料金が嵩むので、ファイルをアップロード
       fileUpload(generativeImage, Number(tokenId));
