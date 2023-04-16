@@ -1,3 +1,9 @@
+# Prompt NFT Tree
+
+Look Here
+
+- https://eth-global-tokyo-2023-git-main-teritamas.vercel.app/
+
 ## What's included ⚡
 
 - SvelteKit app
@@ -91,14 +97,16 @@ forge script Deploy --broadcast --rpc-url $FOUNDRY && pnpm -F app wagmi
 ```
 
 ## vscode config section
+
 follow this: https://book.getfoundry.sh/config/vscode, but use this for the path (because of the monorepo setup):
+
 ```
 "solidity.packageDefaultDependenciesContractsDirectory": "packages/contracts/src",
 "solidity.packageDefaultDependenciesDirectory": "packages/contracts/lib",
 "solidity.compileUsingRemoteVersion": "v0.8.19",
 "editor.formatOnSave": true,
 "[solidity]": {
-    "editor.defaultFormatter": "JuanBlanco.solidity" 
+    "editor.defaultFormatter": "JuanBlanco.solidity"
 },
 "solidity.formatter": "forge",
 ```
@@ -111,6 +119,7 @@ follow this: https://book.getfoundry.sh/config/vscode, but use this for the path
 - Ensure all env vars are set
 
 ## Acknowledgements
+
 - PaulRBerg in general: https://github.com/PaulRBerg
 - Taiko monorepo: https://github.com/taikoxyz/taiko-mono
 - Optimism Starter: https://github.com/ethereum-optimism/optimism-starter
