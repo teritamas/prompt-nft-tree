@@ -1,2 +1,1 @@
-export { signalServiceABI } from "./SignalService";
-export { headerSyncABI } from "./HeaderSync";
+export { promptTreeNftABI } from "./PromptTreeNft";
