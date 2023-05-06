@@ -96,6 +96,12 @@ anvil -m $MNEMONIC
 forge script Deploy --broadcast --rpc-url $FOUNDRY && pnpm -F app wagmi
 ```
 
+deploy contract on sepolia.
+
+```sh
+forge script Deploy --broadcast --rpc-url $SEPOLIA_RPC_URL && pnpm -F app wagmi
+```
+
 ## vscode config section
 
 follow this: https://book.getfoundry.sh/config/vscode, but use this for the path (because of the monorepo setup):

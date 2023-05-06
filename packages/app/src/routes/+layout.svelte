@@ -13,13 +13,13 @@
   const projectId = import.meta.env.VITE_WEB3MODAL_PROJECT_ID;
 
   $providers = {
-    // [sepolia.id]: new ethers.providers.JsonRpcProvider("https://rpc.sepolia.org"),
-    [taiko.id]: new ethers.providers.JsonRpcProvider("https://l2rpc.hackathon.taiko.xyz"),
+    [sepolia.id]: new ethers.providers.JsonRpcProvider("https://rpc.sepolia.org"),
+    // [taiko.id]: new ethers.providers.JsonRpcProvider("https://l2rpc.hackathon.taiko.xyz"),
     [foundry.id]: new ethers.providers.JsonRpcProvider("http://localhost:8545"),
   };
   const { chains, provider } = configureChains(
+    [sepolia, foundry],
     // [sepolia, taiko, foundry],
-    [taiko, foundry],
     [
       jsonRpcProvider({
         rpc: (chain) => ({ http: $providers[chain.id].connection.url }),
