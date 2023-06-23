@@ -1,8 +1,18 @@
 # Prompt NFT Tree
 
+## Live Demo
+
 Look Here
 
-- https://eth-global-tokyo-2023-git-main-teritamas.vercel.app/
+- [Prompt NFT Tree | Live Demo page](https://eth-global-tokyo-2023-git-main-teritamas.vercel.app/)
+
+## Overview
+
+This project is a product developed by Eth Global Tokyo ２０２３. Please check the product page below for details.
+
+- [Prompt NFT Tree | ETHGlobal](https://ethglobal.com/showcase/prompt-nft-tree-9fbj5)
+
+# Usage
 
 ## What's included ⚡
 
